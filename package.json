@@ -2,7 +2,7 @@
   "name": "vue-admin-template",
   "version": "4.4.0",
   "description": "A vue admin template with Element UI & axios & iconfont & permission control & lint",
-  "author": "Pan <panfree23@gmail.com>",
+  "author": "Chenlexiang",
   "scripts": {
     "dev": "vue-cli-service serve",
     "build:prod": "vue-cli-service build",
@@ -14,13 +14,15 @@
     "test:ci": "npm run lint && npm run test:unit"
   },
   "dependencies": {
-    "axios": "0.18.1",
+    "@cloudbase/js-sdk": "^1.7.2",
+    "axios": "^0.18.1",
     "core-js": "3.6.5",
     "element-ui": "2.13.2",
     "js-cookie": "2.2.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
     "path-to-regexp": "2.4.0",
+    "request": "^2.88.2",
     "vue": "2.6.10",
     "vue-router": "3.0.6",
     "vuex": "3.1.0"
