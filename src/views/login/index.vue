@@ -45,8 +45,7 @@
 
       <div class="tips">
         <!-- 用户名和密码提示 -->
-        <span style="margin-right:20px;">username: admin</span>
-        <span> password: any</span>
+        <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span>
       </div>
 
     </el-form>
@@ -60,14 +59,14 @@ export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
+      if (!value) {
         callback(new Error('请输入手机号'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
+      if (!value) {
         callback(new Error('请输入密码'))
       } else {
         callback()
@@ -111,12 +110,13 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
-          }).catch(() => {
-            this.loading = false
-          })
+          // this.$store.dispatch('user/login', this.loginForm).then(() => {
+          //   this.$router.push({ path: this.redirect || '/' })
+          this.$router.push('/dashboard')
+          this.loading = false
+          // }).catch(() => {
+          // this.loading = false
+          // })
         } else {
           console.log('error submit!!')
           return false
@@ -203,7 +203,7 @@ $light_gray: #eee;
   }
 
   .tips {
-    font-size: 14px;
+    font-size: 12px;
     color: #fff;
     margin-bottom: 10px;
 

@@ -23,12 +23,28 @@
         <span class="svg-container">
           <svg-icon icon-class="unit" />
         </span>
-        <el-select ref="unit" v-model="loginForm.unit" placeholder="请选择您的单位" name="unit" type="text" tabindex="1"
-          auto-complete="on" />
+        <el-select style="width: 300px;" filterable ref="unit" v-model="loginForm.unit" placeholder="请选择您的单位" name="unit"
+          type="text" tabindex="1" auto-complete="on">
+          <el-option v-for="item in unitList" :key="item._id"
+            :label="item.data.unitName + (item.data.status ? '' : '（未审核）')" :value="item._id">
+          </el-option>
+        </el-select>
         <span class="show-pwd" @click="dialogFormVisible = true">
           <!-- 显示/隐藏密码图标 -->
           <el-button slot="unit" style="color: #abc2cf;background-color: #2d3a4b;border: #889aa4;">申请新单位</el-button>
         </span>
+      </el-form-item>
+
+      <el-form-item prop="position">
+        <!-- 职位选择框 -->
+        <span class="svg-container">
+          <svg-icon icon-class="unit" />
+        </span>
+        <el-select style="width: 300px;" filterable ref="position" v-model="loginForm.position" placeholder="请选择您的职位"
+          name="unit" type="text" tabindex="1" auto-complete="on">
+          <el-option v-for="item in positionList" :key="item.value" :label="item.label" :value="item.value">
+          </el-option>
+        </el-select>
       </el-form-item>
 
       <el-form-item prop="username">
@@ -53,8 +69,21 @@
         </span>
       </el-form-item>
 
+      <el-form-item prop="anginPassword">
+        <!-- 密码输入框 -->
+        <span class="svg-container">
+          <svg-icon icon-class="password" />
+        </span>
+        <el-input :key="passwordType" ref="anginPassword" v-model="loginForm.anginPassword" :type="passwordType"
+          placeholder="请重复密码" name="anginPassword" tabindex="2" auto-complete="on" @keyup.enter.native="handleLogin" />
+        <span class="show-pwd" @click="showPwd">
+          <!-- 显示/隐藏密码图标 -->
+          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+        </span>
+      </el-form-item>
+
+      <!-- 验证码
       <el-form-item prop="code">
-        <!-- 验证码输入框 -->
         <span class="svg-container">
           <svg-icon icon-class="email" />
         </span>
@@ -66,7 +95,7 @@
           <el-button v-show="timeTrue == false" slot="append"
             style="color: #abc2cf;background-color: #2d3a4b;border: #889aa4;">{{ time }}秒后重新获取</el-button>
         </span>
-      </el-form-item>
+      </el-form-item> -->
 
       <div style="display: flex; flex-direction: column;">
         <div style="margin-bottom: 10px;">
@@ -82,14 +111,13 @@
         </div>
       </div>
 
-      <!-- <div class="tips">
-        <span style="margin-right:20px;">username: admin</span>
-        <span> password: any</span>
-      </div> -->
+      <div class="tips">
+        <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span>
+      </div>
 
     </el-form>
 
-    <el-dialog title="单位注册" style="width:auto" :visible.sync="dialogFormVisible" center>
+    <el-dialog custom-class="dialog" title="单位注册" style="width:auto" :visible.sync="dialogFormVisible" center>
       <div class="login-container">
         <el-form style="padding: 15px 0 30px;width:400px" ref="unitform" :model="unitform" :rules="unitRules"
           class="login-form" auto-complete="on" label-position="left">
@@ -137,29 +165,46 @@
 <script>
 
 import { validUsername } from '@/utils/validate'
-import axios from 'axios'
-
-// const cloudbase = require("@cloudbase/js-sdk");
-// // 初始化 CloudBase 应用
-// const app = cloudbase.init({
-//   env: "engineer-1gxwcvx17e74642d" // 替换为您的环境ID
-// });
-// // 获取数据库引用
-// const db = app.database();
+import db from '@/api/database';
 
 export default {
   name: 'Sign',
   data() {
+
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
+      if (!value) {
         callback(new Error('请输入您的手机号'))
+      }
+      else if (value.length !== 11) {
+        callback(new Error('请输入正确的手机号'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
+      const passwordRegex = /^(?=.*[0-9])(?=.*[a-zA-Z])(.{8,})$/;
       if (!value) {
-        callback(new Error('请输入您的密码'))
+        callback(new Error('请输入您的密码'));
+      } else if (!passwordRegex.test(value)) {
+        callback(new Error('密码至少包含8位字符，且必须包含数字和字母'));
+      } else {
+        callback();
+      }
+    };
+    const validateAnginPassword = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请重复您的密码'))
+      }
+      else if (value !== this.loginForm.password) {
+        callback(new Error('两次输入的密码不一致'))
+      }
+      else {
+        callback()
+      }
+    }
+    const validatePosition = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请选择您的职位'))
       } else {
         callback()
       }
@@ -201,21 +246,30 @@ export default {
     }
     const validateUnitPhone = (rule, value, callback) => {
       if (!value) {
-        callback(new Error('请获取并输入负责人手机号'))
+        callback(new Error('请输入您的手机号'))
+      }
+      else if (value.length !== 11) {
+        callback(new Error('请输入正确的手机号'))
       } else {
         callback()
       }
     }
     return {
+      positionList: [ //职位列表
+        { value: '0', label: '单位负责人' },
+        { value: '1', label: '员工' },
+      ],
+      unitList: null,//单位列表
       dialogFormVisible: false, //弹出框
       timeTrue: true, //是否有验证码倒计时
       time: 0, //验证码倒计时
       loginForm: {
-        username: '',
-        password: '',
         name: '',
         unit: '',
-        code: '',
+        username: '',
+        password: '',
+        anginPassword: '',
+        position: ''
       },
       unitform: {
         unitName: '',
@@ -225,9 +279,12 @@ export default {
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }],
+        anginPassword: [{ required: true, trigger: 'blur', validator: validateAnginPassword }],
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         unit: [{ required: true, trigger: 'blur', validator: validateUnit }],
         code: [{ required: true, trigger: 'blur', validator: validateCode }],
+        position: [{ required: true, trigger: 'blur', validator: validatePosition }],
+
       },
       unitRules: {
         unitName: [{ required: true, trigger: 'blur', validator: validateUnitName }],
@@ -247,7 +304,34 @@ export default {
       immediate: true
     }
   },
+  created() {
+    this.getUnitList()
+  },
   methods: {
+    startLoading() {
+      const loading = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
+      return loading;
+    },
+    endLoading(loading) {
+      loading.close();
+    },
+    getUnitList() {
+      console.log("getUnitList")
+      db.collection("UNIT")
+        .get()
+        .then(res => {
+          console.log(res)
+          this.unitList = res.data
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
     //发送验证码
     sendCode() {
       this.timeTrue = false;
@@ -272,91 +356,76 @@ export default {
     },
     // 提交注册单位
     signUnit() {
-      console.log(this.unitform)
-      console.log(this.formatDateTime())
-
-      // db.collection("UNIT")
-      //   .add({
-      //     unitName: this.unitform.unitName,
-      //     head: this.unitform.head,
-      //     unitPhone: this.unitform.unitPhone,
-      //     time: this.formatDateTime()
-      //   })
-      //   .then((res) => {
-      //     console.log('数据添加成功', res);
-      //   })
-      //   .catch((err) => {
-      //     console.error('数据添加失败', err);
-      //   });
-
-      // const axios = require("axios");
-
-      // const cloudbase = require("@cloudbase/js-sdk");
-      // const app = cloudbase.init({
-      //   env: "disk-9gos565188054239"
-      // });
-
-      // const authHeader = cloudbase.auth().getAuthHeader();
-
-      // axios({
-      //   method: "get",
-      //   url: "https://disk-9gos565188054239.ap-shanghai.kits.tcloudbasegateway.com/cms/2vlq5om7ngqtv6ah/v1/open-api/projects/engineerAdmin/collections/UNIT/contents?limit=10&offset=0",
-      //   // data: {
-      //   //   /* ... */
-      //   // },
-      //   headers: {
-      //     ...authHeader
-      //   }
-      // }).then((res) => {
-      //   //...
-      //   console.log(res)
-      // }).catch((err) => {
-      //   console.log(err)
-      // });
-
-      // 请将以下变量替换为实际值
-      const envId = "disk-9gos565188054239"; // 您的环境 ID
-      const region = "ap-shanghai"; // 您的 CMS 实例所在地域
-      const kitId = "2vlq5om7ngqtv6ah"; // 您的 CMS 实例 ID
-      const projectId = "engineerAdmin"; // 您的 CMS 项目唯一 ID
-      const collectionId = "UNIT"; // 您要访问的 CMS 集合唯一 ID
-      // https://disk-9gos565188054239.ap-shanghai.kits.tcloudbasegateway.com/cms/2vlq5om7ngqtv6ah/v1/open-api/projects/engineerAdmin/collections/UNIT/contents?limit=10&offset=0
-      // 构造请求数据
-      let requestData = {
-        unitName: this.unitform.unitName,
-        head: this.unitform.head,
-        unitPhone: this.unitform.unitPhone,
-        time: this.formatDateTime()
-      };
-
-      // 发送 POST 请求
-      axios.post(`https://${envId}.${region}.kits.tcloudbase.com/cms/${kitId}/v1/open-api/projects/${projectId}/collections/${collectionId}/contents?limit=10&offset=0`, requestData)
-        .then(response => {
-          console.log('请求成功', response.data);
-          // 在这里处理请求成功后的逻辑，可以根据后端返回的数据进行判断处理
-          if (response.status === 200 && response.data.success) {
-            console.log('数据添加成功');
-          } else {
-            console.error('数据添加失败', response.data.error);
-          }
-        })
-        .catch(error => {
-          console.error('请求失败', error);
-        });
-
+      this.$refs.unitform.validate(valid => {
+        if (valid) {
+          this.startLoading(); // 打开loading
+          console.log(this.unitform)
+          console.log(this.formatDateTime())
+          db.collection("UNIT")
+            .add({
+              data: {
+                unitName: this.unitform.unitName,
+                head: this.unitform.head,
+                unitPhone: this.unitform.unitPhone,
+                createTime: this.formatDateTime(),
+                status: false,
+                identity: 0
+              }
+            })
+            .then(res => {
+              console.log(res)
+              this.endLoading(this.startLoading()); // 关闭loading
+              this.$message({
+                message: '提交成功，请等待审核',
+                type: 'success'
+              });
+              this.dialogFormVisible = false
+            })
+            .catch(err => {
+              console.log(err)
+              this.endLoading(this.startLoading()); // 关闭loading
+              this.$message.error('提交失败', err);
+            })
+        } else {
+          this.$message.error('请填写完整信息');
+          return false
+        }
+      })
     },
     applySign() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
-          }).catch(() => {
-            this.loading = false
-          })
+          console.log(this.loginForm, "loginForm")
+          db.collection("PERSONNEL")
+            .add({
+              data: {
+                name: this.loginForm.name,
+                unit: this.loginForm.unit,
+                phone: this.loginForm.username,
+                password: this.loginForm.password,
+                createTime: this.formatDateTime(),
+                status: false,
+                position: this.loginForm.position,
+                identity: 1
+              }
+            })
+            .then(res => {
+              console.log(res)
+              this.loading = false
+              this.$message({
+                message: '提交成功，请等待审核',
+                type: 'success'
+              });
+              this.$router.push('/login');
+            })
+            .catch(err => {
+              this.loading = false
+              console.log(err)
+              this.$message.error('提交失败', err);
+            })
         } else {
-          console.log('error submit!!')
+          this.$message.error('请填写完整信息')
           return false
         }
       })
@@ -465,7 +534,7 @@ $light_gray: #eee;
   }
 
   .tips {
-    font-size: 14px;
+    font-size: 12px;
     color: #fff;
     margin-bottom: 10px;
 

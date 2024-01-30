@@ -56,7 +56,7 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
+      meta: { title: '总览', icon: 'dashboard' }
     }]
   },
 
@@ -65,19 +65,19 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/example/table',
     name: 'Example',
-    meta: { title: 'Example', icon: 'el-icon-s-help' },
+    meta: { title: '项目信息', icon: 'el-icon-s-help' },
     children: [
       {
         path: 'table',
         name: 'Table',
         component: () => import('@/views/table/index'),
-        meta: { title: 'Table', icon: 'table' }
+        meta: { title: '发起项目', icon: 'table' }
       },
       {
         path: 'tree',
         name: 'Tree',
         component: () => import('@/views/tree/index'),
-        meta: { title: 'Tree', icon: 'tree' }
+        meta: { title: '项目进度', icon: 'tree' }
       }
     ]
   },
@@ -90,7 +90,42 @@ export const constantRoutes = [
         path: 'index',
         name: 'Form',
         component: () => import('@/views/form/index'),
-        meta: { title: 'Form', icon: 'form' }
+        meta: { title: '工作确认', icon: 'form' }
+      }
+    ]
+  },
+
+  {
+    path: '/authority',
+    component: Layout,
+    redirect: '/authority/authority',
+    name: 'Authority',
+    meta: { title: '权限', icon: 'authority' },
+    children: [
+      {
+        path: 'table',
+        name: 'Table',
+        component: () => import('@/views/authority/unit'),
+        meta: { title: '单位', icon: 'unit' }
+      },
+      {
+        path: 'tree',
+        name: 'Tree',
+        component: () => import('@/views/authority/person'),
+        meta: { title: '人员', icon: 'person' }
+      }
+    ]
+  },
+
+  {
+    path: '/form',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'Form',
+        component: () => import('@/views/form/index'),
+        meta: { title: '消息', icon: 'form' }
       }
     ]
   },
