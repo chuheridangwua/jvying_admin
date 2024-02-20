@@ -35,6 +35,8 @@
         <div style="margin-bottom: 10px;">
           <el-button :loading="loading" type="primary" style="width: 100%;"
             @click.native.prevent="handleLogin">登录</el-button>
+
+          <el-button :loading="loading" type="primary" style="width: 100%;" @click.native.prevent="ceshi">测试</el-button>
         </div>
         <div style="margin-bottom: 20px;">
           <el-button plain :loading="false" type="primary" style="width: 100%;"
@@ -54,6 +56,8 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
+import db from '@/api/database';
+import app from '@/api/appwx';
 
 export default {
   name: 'Login',
@@ -74,8 +78,8 @@ export default {
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: null,
+        password: null
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -105,18 +109,73 @@ export default {
         this.$refs.password.focus()
       })
     },
+    ceshi() {
+      app
+        .callFunction({
+          // 云函数名称
+          name: "test",
+          // 传给云函数的参数
+          data: {
+            userid: "user1234",
+            projectid: 1,
+            status: "c",
+            price: 111
+          }
+        })
+        .then((res) => {
+          console.log(res);
+        })
+        .catch(console.error);
+
+      // db.collection("PERSONNEL")
+      //   .then((res) => {
+      //     console.log(res);
+
+      //   })
+      //   .catch((err) => {
+      //     console.error("查询失败：", err);
+      //   });
+    },
     handleLogin() {
       console.log('login')
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
           // this.$store.dispatch('user/login', this.loginForm).then(() => {
-          //   this.$router.push({ path: this.redirect || '/' })
-          this.$router.push('/dashboard')
-          this.loading = false
-          // }).catch(() => {
-          // this.loading = false
-          // })
+          console.log(this.loginForm)
+
+          db.collection("PERSONNEL")
+            .aggregate()
+            // 匹配符合条件的文档
+            .match({
+              "data.phone": this.loginForm.username,
+              "data.password": this.loginForm.password
+            })
+            // 执行查询操作
+            .end()
+            .then((res) => {
+              // 查询成功，res 包含符合条件的文档
+              console.log(res);
+              console.log(this.$root.userStatus, "this.$root.ORDERID ");
+              // this.global.userStatus = true
+              this.$root.userStatus = "xxxxx123"
+              console.log(this.$root.userStatus, "this.$root.ORDERID ");
+
+              if (res.data.length > 0) {
+                // 登录成功，跳转到目标页面
+                this.$router.push({ path: this.redirect || '/' });
+              } else {
+                // 登录失败，处理失败逻辑
+                console.log("登录失败：用户名或密码错误");
+              }
+              this.loading = false; // 停止加载状态
+            })
+            .catch((err) => {
+              // 查询失败，处理错误
+              console.error("查询失败：", err);
+              this.loading = false; // 停止加载状态
+            });
+
         } else {
           console.log('error submit!!')
           return false

@@ -33,11 +33,27 @@ Vue.use(ElementUI, { locale })
 // 如果想要中文版 element-ui，按如下方式声明
 // Vue.use(ElementUI)
 
+// 引入样式
+import "vue-easytable/libs/theme-default/index.css";
+// 引入组件库
+import VueEasytable from "vue-easytable";
+
+Vue.use(VueEasytable);
+
 Vue.config.productionTip = false
 
 new Vue({
   el: '#app',
   router,
   store,
-  render: h => h(App)
+  // data: function () {
+  //   return {
+  //     user: {
+  //       token:null,
+  //       phone:null,
+  //       userStatus:false
+  //     },
+  //   }
+  // },
+  render: h => h(App),
 })
