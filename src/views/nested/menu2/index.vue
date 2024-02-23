@@ -58,13 +58,11 @@ export default {
     async fetchCaptcha() {
       try {
         // 发送GET请求获取验证码图片
-        const response = await fetch('http://i.wenjuanji.com/api/v1/Captcha/Image', {
+        const response = await fetch(`/api/api/v1/Captcha/Image`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json, text/plain, */*',
-            // 添加Bearer token
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-            // 其他可能需要的头部
+            'Authorization': 'Bearer ' + this.token,
           }
         });
 
