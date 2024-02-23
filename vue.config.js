@@ -48,6 +48,7 @@ module.exports = {
       '/api': {
         target: 'http://i.wenjuanji.com',
         changeOrigin: true,
+        secure: false,
         pathRewrite: { '^/api': '' },
       },
     },
