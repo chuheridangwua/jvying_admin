@@ -29,19 +29,30 @@ module.exports = {
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
+
+  // devServer: {
+  //   public:'soft-dev.com.cn',
+  //   port: 8080,
+  //   // https:true,
+  //   compress:true,
+  //   disableHostCheck: true,
+  //   open: true,
+  //   overlay: {
+  //     warnings: false,
+  //     errors: true
+  //   },
+  //   before: require('./mock/mock-server.js')
+  // },
   devServer: {
-    public:'soft-dev.com.cn',
-    port: 8080,
-    // https:true,
-    compress:true,
-    disableHostCheck: true,
-    open: true,
-    overlay: {
-      warnings: false,
-      errors: true
+    proxy: {
+      '/api': {
+        target: 'http://i.wenjuanji.com',
+        changeOrigin: true,
+        pathRewrite: { '^/api': '' },
+      },
     },
-    before: require('./mock/mock-server.js')
   },
+  
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
     // it can be accessed in index.html to inject the correct title.

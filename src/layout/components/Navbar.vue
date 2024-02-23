@@ -7,7 +7,7 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <i class="el-icon-user user-avatar"/>
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
@@ -51,9 +51,28 @@ export default {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },
-    async logout() {
-      await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    // async logout() {
+    //   // await this.$store.dispatch('user/logout')
+
+    //   this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    // },
+    logout() {
+      const itemStr = localStorage.getItem('userSession');
+      if (itemStr) {
+        const item = JSON.parse(itemStr);
+        const now = new Date();
+        const loginDuration = now.getTime() - (item.expiry - 3600000); // 登录持续时间
+        console.log(`登录时间：${loginDuration / 1000}秒`);
+
+        // 清除localStorage中的登录状态
+        localStorage.removeItem('userSession');
+      }
+      this.$message({
+        message: '退出成功',
+        type: 'success'
+      });
+      // 使用Vue Router导航到登录页面
+      this.$router.push('/login');
     }
   }
 }
@@ -65,7 +84,7 @@ export default {
   overflow: hidden;
   position: relative;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
 
   .hamburger-container {
     line-height: 46px;
@@ -73,7 +92,7 @@ export default {
     float: left;
     cursor: pointer;
     transition: background .3s;
-    -webkit-tap-highlight-color:transparent;
+    -webkit-tap-highlight-color: transparent;
 
     &:hover {
       background: rgba(0, 0, 0, .025)

@@ -6,7 +6,7 @@
 
       <div class="title-container">
         <!-- 登录标题 -->
-        <h1 class="title">长清区工业项目征供地推进后台系统</h1>
+        <h1 class="title">聚英众包后台管理系统</h1>
       </div>
 
       <el-form-item prop="username">
@@ -15,7 +15,7 @@
           <svg-icon icon-class="user" />
         </span>
         <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
-          tabindex="1" auto-complete="on" />
+          tabindex="1" auto-complete="on" @keyup.enter.native="handleLogin"/>
       </el-form-item>
 
       <el-form-item prop="password">
@@ -35,19 +35,17 @@
         <div style="margin-bottom: 10px;">
           <el-button :loading="loading" type="primary" style="width: 100%;"
             @click.native.prevent="handleLogin">登录</el-button>
-
-          <el-button :loading="loading" type="primary" style="width: 100%;" @click.native.prevent="ceshi">测试</el-button>
         </div>
-        <div style="margin-bottom: 20px;">
+        <!-- <div style="margin-bottom: 20px;">
           <el-button plain :loading="false" type="primary" style="width: 100%;"
             @click.native.prevent="handleSign">注册</el-button>
-        </div>
+        </div> -->
       </div>
 
 
       <div class="tips">
         <!-- 用户名和密码提示 -->
-        <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span>
+        <!-- <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span> -->
       </div>
 
     </el-form>
@@ -109,33 +107,6 @@ export default {
         this.$refs.password.focus()
       })
     },
-    ceshi() {
-      app
-        .callFunction({
-          // 云函数名称
-          name: "test",
-          // 传给云函数的参数
-          data: {
-            userid: "user1234",
-            projectid: 1,
-            status: "c",
-            price: 111
-          }
-        })
-        .then((res) => {
-          console.log(res);
-        })
-        .catch(console.error);
-
-      // db.collection("PERSONNEL")
-      //   .then((res) => {
-      //     console.log(res);
-
-      //   })
-      //   .catch((err) => {
-      //     console.error("查询失败：", err);
-      //   });
-    },
     handleLogin() {
       console.log('login')
       this.$refs.loginForm.validate(valid => {
@@ -144,12 +115,12 @@ export default {
           // this.$store.dispatch('user/login', this.loginForm).then(() => {
           console.log(this.loginForm)
 
-          db.collection("PERSONNEL")
+          db.collection("administrator")
             .aggregate()
             // 匹配符合条件的文档
             .match({
-              "data.phone": this.loginForm.username,
-              "data.password": this.loginForm.password
+              phone: this.loginForm.username,
+              password: this.loginForm.password
             })
             // 执行查询操作
             .end()
@@ -162,10 +133,20 @@ export default {
               console.log(this.$root.userStatus, "this.$root.ORDERID ");
 
               if (res.data.length > 0) {
+                this.$message({
+                  message: '登录成功',
+                  type: 'success'
+                });
+                console.log(res.data[0]._id);
+                this.storeLoginSession(res.data[0]._id);
                 // 登录成功，跳转到目标页面
                 this.$router.push({ path: this.redirect || '/' });
               } else {
                 // 登录失败，处理失败逻辑
+                this.$message({
+                  message: '登录失败：用户名或密码错误',
+                  type: 'error'
+                });
                 console.log("登录失败：用户名或密码错误");
               }
               this.loading = false; // 停止加载状态
@@ -173,10 +154,18 @@ export default {
             .catch((err) => {
               // 查询失败，处理错误
               console.error("查询失败：", err);
+              this.$message({
+                message: '登录失败：网络错误',
+                type: 'error'
+              });
               this.loading = false; // 停止加载状态
             });
 
         } else {
+          this.$message({
+            message: '请完善登录信息',
+            type: 'error'
+          });
           console.log('error submit!!')
           return false
         }
@@ -187,6 +176,15 @@ export default {
       // 清除重定向
       this.redirect = undefined;
       this.$router.push('/sign');
+    },
+    storeLoginSession(token) {
+      const now = new Date();
+      const item = {
+        loggedIn: true,
+        token: token, // 假设使用token作为登录凭证
+        expiry: now.getTime() + 3600000, // 当前时间 + 1小时的毫秒数
+      };
+      localStorage.setItem('userSession', JSON.stringify(item));
     }
 
   }

@@ -6,7 +6,7 @@ import login from '@/api/wxlogin';
 login();
 
 const app = cloudbase.init({
-    env: "part-time-0gls03fkb9ad827d"
+    env: "jvyingzhongbao-1g4qvecl6e75139d"
 });
 
 export default app;

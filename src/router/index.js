@@ -218,4 +218,33 @@ export function resetRouter() {
   router.matcher = newRouter.matcher // reset router
 }
 
+router.beforeEach((to, from, next) => {
+  // 假设有一个函数isUserLoggedIn()来检查用户是否登录
+  const isLoggedin = isUserLoggedIn(); // 这需要你根据实际情况实现
+  if (!isLoggedin && to.path !== '/login') {
+    // 如果用户未登录并且目标路径不是登录页，则重定向到登录页
+    next('/login');
+  } else {
+    // 如果用户已登录，或者访问的是登录页，则正常导航
+    next();
+  }
+});
+
+function isUserLoggedIn() {
+  const itemStr = localStorage.getItem('userSession');
+  if (!itemStr) {
+    return false;
+  }
+  const item = JSON.parse(itemStr);
+  const now = new Date();
+  // 检查session是否过期
+  if (now.getTime() > item.expiry) {
+    // 如果登录状态过期，清除存储的session信息并返回false
+    localStorage.removeItem('userSession');
+    return false;
+  }
+  return item.loggedIn;
+}
+
+
 export default router
