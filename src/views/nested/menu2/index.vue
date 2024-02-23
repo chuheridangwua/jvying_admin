@@ -1,6 +1,6 @@
 <template>
   <div>
-    <button @click="downloadFile">Download File123</button>
+    <button @click="downloadFile">Download File123456</button>
     <button @click="api">Download Fileapi</button>
     <button @click="login">login</button>
     <img :src="captchaImageUrl" alt="Captcha" />
