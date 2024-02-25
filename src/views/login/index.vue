@@ -6,7 +6,7 @@
 
       <div class="title-container">
         <!-- 登录标题 -->
-        <h1 class="title">考言调查后台管理系统</h1>
+        <h1 class="title">开言调查后台管理系统</h1>
       </div>
 
       <el-form-item prop="username">
