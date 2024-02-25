@@ -7,16 +7,8 @@
         </template>
       </el-table-column>
       <el-table-column prop="id" label="ID号" width="100"></el-table-column>
-      <el-table-column prop="number" label="项目编号" width="180"></el-table-column>
-      <el-table-column prop="title" label="问卷名称"></el-table-column>
-      <el-table-column label="状态" width="120">
-        <template slot-scope="scope">
-          {{ scope.row.status === 0 ? '进行中' : '暂停' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="cpi2Complete" label="单价" width="100"></el-table-column>
-      <el-table-column prop="maxComplete" label="配额量" width="100"></el-table-column>
-      <el-table-column prop="completes" label="完成量" width="100"></el-table-column>
+      <el-table-column prop="relationId" label="项目编号" width="100"></el-table-column>
+      <el-table-column prop="description" label="信息"></el-table-column>
     </el-table>
     <div class="pagination-container">
       <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
@@ -52,11 +44,12 @@ export default {
         const res = await app.callFunction({
           name: "getAuthUrl",
           data: {
-            url: `http://i.wenjuanji.com/api/v1/Projects?page=${page}&size=${this.pageSize}&appId=148&searchCateId=1&entryType=1`,
+            url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=${this.pageSize}&actionId=0`,
             authorization: `Bearer ${token}`,
           }
         });
         const result = JSON.parse(res.result);
+        console.log(result);
         if (result && result.data) {
           this.projectList = result.data.data;
           this.totalProjects = result.data.dataCount;

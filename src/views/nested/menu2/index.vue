@@ -110,7 +110,7 @@ export default {
           captcha: this.captcha
         });
 
-        const response = await fetch(`${this.baseUrl}/api/v1/Login?${queryParams.toString()}`, {
+        const response = await fetch(`http://i.wenjuanji.com/api/v1/Login?${queryParams.toString()}`, {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
@@ -135,7 +135,7 @@ export default {
     async api() {
       try {
         console.log("Requesting download URL...");
-        const response = await fetch(`http://i.wenjuanji.com/api/v1/CashLogs?page=1&size=10&actionId=0`, {
+        const response = await fetch(`http://i.wenjuanji.com/api/v1/Projects?page=1&size=10&appId=148&searchCateId=1&entryType=1`, {
           method: 'GET',
           headers: {
             'Authorization': 'Bearer ' + this.token,

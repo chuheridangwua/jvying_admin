@@ -51,13 +51,39 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/开言调查',
     children: [{
       path: 'dashboard',
-      name: 'Dashboard',
+      name: '开言调查',
       component: () => import('@/views/dashboard/index'),
       meta: { title: '总览', icon: 'dashboard' }
     }]
+  },
+
+  {
+    path: '/wenjvan',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'Wenjvan',
+        component: () => import('@/views/wenjvan/index'),
+        meta: { title: '问卷', icon: 'form' }
+      }
+    ]
+  },
+
+  {
+    path: '/newdown',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'Newdown',
+        component: () => import('@/views/newdown/index'),
+        meta: { title: '新完成列表', icon: 'form' }
+      }
+    ]
   },
 
   {
@@ -65,13 +91,13 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/example/table',
     name: 'Example',
-    meta: { title: '项目信息', icon: 'el-icon-s-help' },
+    meta: { title: '结算', icon: 'el-icon-s-help' },
     children: [
       {
         path: 'table',
         name: 'Table',
         component: () => import('@/views/table/index'),
-        meta: { title: '发起项目', icon: 'table' }
+        meta: { title: '结算信息', icon: 'table' }
       },
       {
         path: 'tree',
