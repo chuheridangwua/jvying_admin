@@ -4,7 +4,7 @@ import cloudbase from '@cloudbase/js-sdk';
 import login from '@/api/wxlogin';
 
 const app = cloudbase.init({
-    env: 'jvyingzhongbao-1g4qvecl6e75139d' // 填入您的环境 ID
+    env: 'part-time-0gls03fkb9ad827d' // 填入您的环境 ID
 });
 
 login();

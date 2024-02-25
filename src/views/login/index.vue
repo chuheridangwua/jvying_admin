@@ -15,7 +15,7 @@
           <svg-icon icon-class="user" />
         </span>
         <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
-          tabindex="1" auto-complete="on" @keyup.enter.native="handleLogin"/>
+          tabindex="1" auto-complete="on" @keyup.enter.native="handleLogin" />
       </el-form-item>
 
       <el-form-item prop="password">
@@ -35,6 +35,10 @@
         <div style="margin-bottom: 10px;">
           <el-button :loading="loading" type="primary" style="width: 100%;"
             @click.native.prevent="handleLogin">登录</el-button>
+
+          <el-button :loading="loading" type="primary" style="width: 100%;"
+            @click.native.prevent="ceshi">ceshi</el-button>
+
         </div>
         <!-- <div style="margin-bottom: 20px;">
           <el-button plain :loading="false" type="primary" style="width: 100%;"
@@ -97,6 +101,22 @@ export default {
     }
   },
   methods: {
+
+    ceshi() {
+      app
+        .callFunction({
+          // 云函数名称
+          name: "getUrl",// 传给云函数的参数
+          data: {
+            url:'http://i.wenjuanji.com/api/v1/Captcha/Image'
+          }
+        })
+        .then((res) => {
+          console.log(res)
+        })
+        .catch(console.error)
+    },
+
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
