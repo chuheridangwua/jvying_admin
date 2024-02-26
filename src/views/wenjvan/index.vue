@@ -6,7 +6,7 @@
           {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column prop="id" label="ID号" width="100"></el-table-column>
+      <el-table-column prop="projectId" label="ID号" width="100"></el-table-column>
       <el-table-column prop="number" label="项目编号" width="180"></el-table-column>
       <el-table-column prop="title" label="问卷名称"></el-table-column>
       <el-table-column label="状态" width="120">
@@ -57,6 +57,7 @@ export default {
           }
         });
         const result = JSON.parse(res.result);
+        console.log(result)
         if (result && result.data) {
           this.projectList = result.data.data;
           this.totalProjects = result.data.dataCount;

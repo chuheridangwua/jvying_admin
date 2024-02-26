@@ -6,6 +6,7 @@
           {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
         </template>
       </el-table-column>
+      <el-table-column prop="dateline" label="完成时间" width="200"></el-table-column>
       <el-table-column prop="id" label="ID号" width="100"></el-table-column>
       <el-table-column prop="relationId" label="项目编号" width="100"></el-table-column>
       <el-table-column prop="description" label="信息"></el-table-column>
