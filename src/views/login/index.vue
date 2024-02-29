@@ -3,21 +3,18 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on"
       label-position="left">
       <!-- 登录表单 -->
-
       <div class="title-container">
         <!-- 登录标题 -->
         <h1 class="title">聚英众包后台管理系统</h1>
       </div>
-
       <el-form-item prop="username">
         <!-- 用户名输入框 -->
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
-          tabindex="1" auto-complete="on" @keyup.enter.native="handleLogin"/>
+          tabindex="1" auto-complete="on" @keyup.enter.native="handleLogin" />
       </el-form-item>
-
       <el-form-item prop="password">
         <!-- 密码输入框 -->
         <span class="svg-container">
@@ -30,32 +27,18 @@
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
-
       <div style="display: flex; flex-direction: column;">
         <div style="margin-bottom: 10px;">
           <el-button :loading="loading" type="primary" style="width: 100%;"
             @click.native.prevent="handleLogin">登录</el-button>
         </div>
-        <!-- <div style="margin-bottom: 20px;">
-          <el-button plain :loading="false" type="primary" style="width: 100%;"
-            @click.native.prevent="handleSign">注册</el-button>
-        </div> -->
       </div>
-
-
-      <div class="tips">
-        <!-- 用户名和密码提示 -->
-        <!-- <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span> -->
-      </div>
-
     </el-form>
   </div>
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
 import db from '@/api/database';
-import app from '@/api/appwx';
 
 export default {
   name: 'Login',

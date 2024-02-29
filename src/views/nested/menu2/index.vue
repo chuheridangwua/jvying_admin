@@ -1,7 +1,7 @@
 <template>
   <div>
-    <button @click="downloadFile">Download File123456</button>
-    <button @click="api">Download Fileapi123</button>
+    <button @click="downloadFile">Download File123</button>
+    <button @click="api">Download Fileapi</button>
     <button @click="login">login</button>
     <img :src="captchaImageUrl" alt="Captcha" />
     <input type="text" v-model="captcha" placeholder="请输入验证码">
@@ -57,27 +57,50 @@ export default {
   methods: {
     async fetchCaptcha() {
       try {
-        // 发送GET请求获取验证码图片
-        const response = await fetch(`/api/api/v1/Captcha/Image`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json, text/plain, */*',
-            'Authorization': 'Bearer ' + this.token,
-          }
+        // 调用云函数获取验证码图片
+        const res = await this.$app.callFunction({
+          name: "fetchCaptcha", // 云函数名称
+          data: {} // 此处没有传入任何参数，但可以根据需要添加
         });
 
-        // 假设API响应的内容是直接的图像数据
-        const data = await response.json();
+        const data = res.result; // 获取云函数返回的结果
         console.log('fetching captcha:', data);
-        console.log('fetching captcha:', data.data);
 
-        // 假设data中包含了base64编码的图像数据
-        this.captchaImageUrl = 'data:image/png;base64,' + data.data.base64;
-        this.captchaId = data.data.id;
+        // 更新验证码图像和ID
+        if (data.success) {
+          this.captchaImageUrl = 'data:image/png;base64,' + data.captchaImageUrl;
+          this.captchaId = data.captchaId;
+        } else {
+          console.error('Error fetching captcha:', data.error);
+        }
       } catch (error) {
-        console.error('Error fetching captcha:', error);
+        console.error('Error calling fetchCaptcha cloud function:', error);
       }
     },
+
+    // async fetchCaptcha() {
+    //   try {
+    //     // 发送GET请求获取验证码图片
+    //     const response = await fetch('http://i.wenjuanji.com/api/v1/Captcha/Image', {
+    //       method: 'GET',
+    //       headers: {
+    //         'Accept': 'application/json, text/plain, */*',
+    //         // 添加Bearer token
+    //       }
+    //     });
+
+    //     // 假设API响应的内容是直接的图像数据
+    //     const data = await response.json();
+    //     console.log('fetching captcha:', data);
+    //     console.log('fetching captcha:', data.data);
+
+    //     // 假设data中包含了base64编码的图像数据
+    //     this.captchaImageUrl = 'data:image/png;base64,' + data.data.base64;
+    //     this.captchaId = data.data.id;
+    //   } catch (error) {
+    //     console.error('Error fetching captcha:', error);
+    //   }
+    // },
     async login() {
       try {
         const queryParams = new URLSearchParams({
