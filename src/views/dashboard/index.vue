@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">name: {{ name }}</div>
+    <h1 class="dashboard-text">欢迎来到聚英众包后台管理系统</h1>
   </div>
 </template>
 
@@ -20,7 +20,7 @@ export default {
 <style lang="scss" scoped>
 .dashboard {
   &-container {
-    margin: 30px;
+    margin: 50px;
   }
   &-text {
     font-size: 30px;

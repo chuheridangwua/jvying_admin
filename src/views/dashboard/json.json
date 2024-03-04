@@ -1,0 +1,91 @@
+{
+    "_id": "3fa9b31265e08647000dceb812b1235", // 文档ID
+    "_openid": "d8e2ad59e9ff45279eadc385e94d572e", // 用户唯一标识
+    "data": {
+        "name": "张三", // 姓名
+        "phone": "13280346031", // 电话(账号)
+        "password": "123456", // 密码
+        "email": "zhangsan@example.com", // 邮箱
+        "school": "某某大学", // 学校
+        "education": "本科", // 学历 ["小学", "初中", "高中", "大专", "本科", "硕士", "博士"]
+        "studentPhoto": "cloud://path/to/studentPhoto.jpg", // 学生证照片
+        "idPhoto": "cloud://path/to/idPhoto.jpg", // 身份证照片
+        "teacherQualificationPhoto": "cloud://path/to/idPhoto.jpg", // 教师资格证照片
+        "englishLevel": "四级", // 英语等级 ["三级", "四级", "六级", "八级", "雅思", "托福"]
+        "englishLevelPhoto": "cloud://path/to/idPhoto.jpg", // 英语等级照片
+        "elsePhoto": [ // 其他证书
+            "cloud://path/to/certificate1.jpg",
+            "cloud://path/to/certificate2.jpg"
+        ],
+        "teacherQualification": true, // 教师资格证
+        "userId": "user123456", // 用户ID
+        "taskListDetails": [ //任务列表详情
+            {
+                "getTime": "2020-01-01 11:39:39", // 接单任务时间
+                "taskId": "task123", // 任务ID
+                "completionQuantity": 100, // 完成数量
+                "amountDisbursed": 800, // 已结算金额
+                "amountPending": 200 // 未结算金额
+            },
+            {
+                "getTime": "2022-02-02  11:39:39", // 接单任务时间
+                "taskId": "task456",
+                "completionQuantity": 150,
+                "amountDisbursed": 1000,
+                "amountPending": 1250
+            }
+        ],
+        "salaryList": [ // 薪资列表
+            "task123",
+            "task456"
+        ],
+        "pay": { // 提现信息
+            "payName": "张三", // 提现人姓名
+            "payPhone": "13800138000" // 支付宝手机号
+        },
+        "satuts":false, //审核状态
+        "isAuditing":false, //是否审核
+        "auditingMessage":"" //审核意见
+    }
+}
+
+
+{
+    "_id": "2b13da7f65e3f0ee007ba7fd69998fae",
+    "data": {
+        "englishLevelFour": true,
+        "phone": "13280346031",
+        "school": "某某大学",
+        "studentPhoto": "cloud://jvyingzhongbao-1g4qvecl6e75139d.6a76-jvyingzhongbao-1g4qvecl6e75139d-1324428997/taskImages/1709281971504-0-latex1.png",
+        "elsePhoto": [
+            "cloud://jvyingzhongbao-1g4qvecl6e75139d.6a76-jvyingzhongbao-1g4qvecl6e75139d-1324428997/taskImages/1709281971504-0-latex1.png",
+            "cloud://jvyingzhongbao-1g4qvecl6e75139d.6a76-jvyingzhongbao-1g4qvecl6e75139d-1324428997/taskImages/1709281971504-0-latex1.png"
+        ],
+        "idPhoto": "cloud://jvyingzhongbao-1g4qvecl6e75139d.6a76-jvyingzhongbao-1g4qvecl6e75139d-1324428997/taskImages/1709281971504-0-latex1.png",
+        "name": "张三",
+        "teacherQualification": true,
+        "education": "本科",
+        "pay": {
+            "payName": "张三",
+            "payPhone": "13800138000"
+        },
+        "salaryList": [
+            "task123",
+            "task456"
+        ],
+        "taskListDetails": [
+            {
+                "amountDisbursed": 800.0,
+                "amountPending": 200.0,
+                "completionQuantity": 100.0,
+                "getTime": "2020-01-01 11:39:39",
+                "taskId": "3fa9b31265e08647000dceb812bb2dd9"
+            }
+        ],
+        "password": "123456",
+        "englishLevelSix": false,
+        "userId": "user123456",
+        "email": "zhangsan@example.com",
+        "satuts":false
+    }
+}

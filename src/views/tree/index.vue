@@ -1,11 +1,12 @@
 <template>
     <div v-loading="loading">
         <!-- 搜索框 -->
-        <el-input style="margin:20px;width: 20%;" v-model="searchQuery" placeholder="请输入项目标题" class="search-box"
-            @input="filterProjects">
-        </el-input>
+        <div style="margin:20px;width: 40%;display: flex;">
+            <div style="width: 150px;margin-top: 10px;margin-left: 20px;">项目标题:</div>
+            <el-input v-model="searchQuery" placeholder="请输入项目标题" class="search-box" @input="filterProjects"></el-input>
+        </div>
         <!-- 项目信息表格 -->
-        <el-table :data="filteredProjects" style="width: 95%;margin:0 20px;" row-height="100">
+        <el-table :data="filteredProjects" style="width: 95%;margin:0 20px;" row-height="80" border>
             <el-table-column type="index" label="#" width="50"></el-table-column>
             <el-table-column prop="data.title" label="项目标题" width="180"></el-table-column>
             <el-table-column label="项目图片" width="180">
@@ -18,24 +19,27 @@
             </el-table-column>
             <el-table-column label="项目详情">
                 <template slot-scope="scope">
-                    {{ scope.row.data.detail.substring(0, 20) + (scope.row.data.detail.length > 20 ? '...' : '') }}
+                    {{ scope.row.data.detail.substring(0, 50) + (scope.row.data.detail.length > 50 ? '...' : '') }}
                 </template>
             </el-table-column>
             <el-table-column label="开始时间" width="180">
-                <template slot-scope="scope">
-                    {{ formatDate(new Date(scope.row.data.startTime)) }}
-                </template>
+                <template slot-scope="scope">{{ formatDate(new Date(scope.row.data.startTime)) }}</template>
             </el-table-column>
             <el-table-column label="结束时间" width="180">
-                <template slot-scope="scope">
-                    {{ formatDate(new Date(scope.row.data.endTime)) }}
-                </template>
+                <template slot-scope="scope">{{ formatDate(new Date(scope.row.data.endTime)) }}</template>
             </el-table-column>
             <el-table-column prop="data.price" label="任务价格" width="100"></el-table-column>
             <el-table-column prop="data.peopleNeeded" label="需求人数" width="100"></el-table-column>
+            <el-table-column label="操作" width="180">
+                <template slot-scope="scope">
+                    <el-button size="mini" @click="editProject(scope.row)">编辑</el-button>
+                    <el-button size="mini" type="danger" @click="confirmDelete(scope.row._id, scope.$index)">删除</el-button>
+                </template>
+            </el-table-column>
         </el-table>
     </div>
 </template>
+
 
 <script>
 import db from '@/api/database';
@@ -102,6 +106,45 @@ export default {
             }
             return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
                 date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        },
+        editProject(project) {
+            console.log("Editing project", project._id);
+            this.$router.push({ path: '/example/table', query: { projectId: project._id } });
+        },
+        confirmDelete(id, index) {
+            this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.deleteProject(id, index);
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
+        async deleteProject(id, index) {
+            try {
+                await db.collection("task")
+                    .doc(id)
+                    .remove()
+                    .then((res) => {
+                        console.log('删除成功', res);
+                        this.$message.success('删除成功');
+                        this.filteredProjects.splice(index, 1); // 从列表中移除已删除的项目
+                    })
+                    .catch(() => {
+                        this.$message({
+                            type: 'error',
+                            message: '删除失败'
+                        });
+                    });
+            } catch (error) {
+                console.error("删除项目出错:", error);
+                this.$message.error('删除失败');
+            }
         }
     }
 };
@@ -109,7 +152,7 @@ export default {
 
 <style scoped>
 .search-box {
-    margin-bottom: 20px;
+    flex-grow: 1;
 }
 
 .image-container img {

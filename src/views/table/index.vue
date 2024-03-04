@@ -5,7 +5,7 @@
     </el-form-item>
     <el-form-item label="项目图片">
       <el-upload action="#" list-type="picture-card" :auto-upload="false" :file-list="fileList" :on-change="handleChange"
-        :on-preview="handlePictureCardPreview" :on-remove="handleRemove">
+        :on-preview="handlePictureCardPreview" :on-remove="handleRemove" :before-upload="() => false">
         <i slot="default" class="el-icon-plus"></i>
         <div slot="file" slot-scope="{file}">
           <img class="el-upload-list__item-thumbnail" :src="file.url" alt="">
@@ -39,7 +39,9 @@
       <el-input v-model="projectForm.peopleNeeded" type="number"></el-input>
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" :loading="submitting" @click="submitForm">创建项目</el-button>
+      <el-button type="primary" :loading="submitting" @click="confirmSubmit">
+        {{ projectId ? '确认更新' : '创建项目' }}
+      </el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -101,6 +103,7 @@ export default {
       }
     };
     return {
+      projectId: '',
       projectForm: {
         title: '',
         detail: '',
@@ -124,7 +127,48 @@ export default {
       disabled: false
     };
   },
+  created() {
+    this.projectId = this.$route.query.projectId;
+    if (this.projectId) {
+      this.fetchProjectData(this.projectId);
+    }
+  },
   methods: {
+    async fetchProjectData(projectId) {
+      try {
+        // 获取项目详情
+        const res = await db.collection("task").doc(projectId).get();
+        console.log('获取成功', res);
+        if (res.data.length > 0) {
+          // 更新项目详情到状态中
+          this.projectForm = {
+            title: res.data[0].data.title,
+            detail: res.data[0].data.detail,
+            startTime: res.data[0].data.startTime,
+            endTime: res.data[0].data.endTime,
+            price: res.data[0].data.price,
+            peopleNeeded: res.data[0].data.peopleNeeded,
+          };
+
+          // 如果项目中包含图片，获取图片的临时链接
+          if (res.data[0].data.images && res.data[0].data.images.length > 0) {
+            const downloadRes = await app.getTempFileURL({
+              fileList: res.data[0].data.images,
+            });
+            // 更新图片临时链接到状态中
+            this.fileList = downloadRes.fileList.map(file => ({
+              name: file.fileID, // 根据实际情况调整
+              url: file.tempFileURL,
+            }));
+          }
+        } else {
+          this.$message.error('未找到指定的项目数据');
+        }
+      } catch (err) {
+        console.error("获取项目数据失败：", err);
+        this.$message.error('获取项目数据失败');
+      }
+    },
     handleRemove(file) {
       // 查找要删除的文件在fileList中的索引
       const index = this.fileList.findIndex(f => f.uid === file.uid);
@@ -189,31 +233,43 @@ export default {
     async uploadImageToCloud() {
       console.log("开始上传图片...");
       console.log("this.fileList", this.fileList);
-      if (this.fileList.length === 0) {
-        console.log("没有图片需要上传");
-        return [];
+
+      // 筛选出需要上传的新图片（假设新图片具有 raw 属性）
+      const newImages = this.fileList.filter(file => file.raw);
+
+      if (newImages.length === 0) {
+        console.log("没有新图片需要上传");
+        // 直接返回已有图片的 ID，避免上传步骤
+        return this.fileList.map(file => file.name); // 假设 file.name 存储的是图片在云存储中的 ID
       }
-      const uploadPromises = this.fileList.map((file, index) => {
+
+      const uploadPromises = newImages.map((file, index) => {
         const cloudPath = `taskImages/${Date.now()}-${index}-${file.name}`;
         const blob = this.dataURLtoBlob(file.url); // 将数据URL转换为Blob
         console.log(`准备上传图片：${file.name} 到 ${cloudPath}`);
-        // 输出Blob信息以供检查
-        console.log(`Blob对象：`, blob);
         return app.uploadFile({
           cloudPath: cloudPath,
           filePath: blob, // 使用Blob对象进行上传
         }).then(res => {
           console.log(`图片${file.name}上传成功，返回结果：`, res);
-          return res;
+          return res.fileID; // 假设上传后返回的结果中包含 fileID
         }).catch(error => {
           console.error(`图片${file.name}上传失败，错误：`, error);
-          throw error; // 继续抛出错误，以便可以在函数外部捕获
+          throw error;
         });
       });
+
       try {
-        const results = await Promise.all(uploadPromises);
-        console.log("所有图片上传完成, 结果：", results);
-        return results.map(res => res.fileID);
+        const uploadedFileIDs = await Promise.all(uploadPromises);
+        console.log("新图片上传完成, 返回的 FileIDs：", uploadedFileIDs);
+
+        // 合并已上传的图片 ID 和新上传的图片 ID
+        const allFileIDs = this.fileList
+          .filter(file => !file.raw) // 已上传的图片
+          .map(file => file.name) // 假设 file.name 存储的是图片在云存储中的 ID
+          .concat(uploadedFileIDs); // 添加新上传的图片 ID
+
+        return allFileIDs;
       } catch (error) {
         console.error("上传图片过程中出现错误", error);
         throw error; // 抛出错误以便可以进行进一步处理
@@ -231,38 +287,83 @@ export default {
       this.$refs.projectForm.validate(async (valid) => {
         if (valid) {
           this.submitting = true; // 开始提交，显示加载状态
-          try {
-            const imageFileIDs = await this.uploadImageToCloud(); // 先上传图片
-            console.log("图片上传成功，File IDs:", imageFileIDs);
-            const taskData = {
-              ...this.projectForm,
-              images: imageFileIDs,
-            };
-            await db.collection("task").add({ data: taskData });
-            console.log("表单数据上传成功");
-            this.$message.success('项目创建成功');
-            // 清空表单
-            this.projectForm = {
-              title: '',
-              detail: '',
-              startTime: '',
-              endTime: '',
-              price: '',
-              peopleNeeded: ''
-            };
-            this.fileList = []; // 清空文件列表
-            // 跳转到指定页面
-            this.$router.push('/example/tree');
-          } catch (error) {
-            console.error("上传数据失败", error);
-            this.$message.error('项目创建失败');
-          } finally {
-            this.submitting = false; // 结束提交，隐藏加载状态
+          if (!this.projectId) {
+            try {
+              const imageFileIDs = await this.uploadImageToCloud(); // 先上传图片
+              console.log("图片上传成功，File IDs:", imageFileIDs);
+              const taskData = {
+                ...this.projectForm,
+                images: imageFileIDs,
+              };
+              await db.collection("task").add({ data: taskData });
+              console.log("表单数据上传成功");
+              this.$message.success('项目创建成功');
+              // 清空表单
+              this.projectForm = {
+                title: '',
+                detail: '',
+                startTime: '',
+                endTime: '',
+                price: '',
+                peopleNeeded: ''
+              };
+              this.fileList = []; // 清空文件列表
+              // 跳转到指定页面
+              this.$router.push('/example/tree');
+            } catch (error) {
+              console.error("上传数据失败", error);
+              this.$message.error('项目创建失败');
+            } finally {
+              this.submitting = false; // 结束提交，隐藏加载状态
+            }
+          } else {
+            try {
+              const imageFileIDs = await this.uploadImageToCloud(); // 先上传图片
+              console.log("图片更新成功，File IDs:", imageFileIDs);
+              const taskData = {
+                ...this.projectForm,
+                images: imageFileIDs,
+              };
+              await db.collection("task").doc(this.projectId).update({ data: taskData });
+              console.log("表单数据更新成功");
+              this.$message.success('项目更新成功');
+              // 清空表单
+              this.projectForm = {
+                title: '',
+                detail: '',
+                startTime: '',
+                endTime: '',
+                price: '',
+                peopleNeeded: ''
+              };
+              this.fileList = []; // 清空文件列表
+              // 跳转到指定页面
+              this.$router.push('/example/tree');
+            } catch (error) {
+              console.error("更新数据失败", error);
+              this.$message.error('项目更新失败');
+            } finally {
+              this.submitting = false; // 结束提交，隐藏加载状态
+            }
           }
         } else {
           console.log('表单验证失败');
           this.$message.error('表单验证失败，请检查输入');
         }
+      });
+    },
+    confirmSubmit() {
+      this.$confirm(`确定要${this.projectId ? '更新' : '创建'}此项目吗？`, '确认操作', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.submitForm();
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消操作'
+        });
       });
     },
   }
