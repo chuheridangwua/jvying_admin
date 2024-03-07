@@ -25,6 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
+      <el-button @click="loading" type="warning" style="margin: 10px;">loading</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -143,6 +144,14 @@ export default {
     },
   },
   methods: {
+    loading() {
+      this.length = true
+      setTimeout(function () {
+        // 在这里写上你想要执行的操作
+        this.length = false
+        console.log("3秒后执行");
+      }, 3000); // 时间以毫秒为单位，3000毫秒等于3秒
+    },
     async fetchProjects() {
       // 清空之前的数据
       this.rows = [];
