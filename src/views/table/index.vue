@@ -1,5 +1,6 @@
 <template>
   <div>
+    <my-loading-indicator :visible="isLoading"></my-loading-indicator>
     <!-- 数据展示表格 -->
     <div style="margin: 20px; display: flex; flex-wrap: wrap; align-items: center;">
       <el-input placeholder="搜索调查ID" v-model="search.projectId"
@@ -52,8 +53,8 @@
     </el-table>
 
     <!-- 下载状态对话框 -->
-    <el-dialog :visible.sync="isDownloadStatusDialogVisible" width="40%"
-      :before-close="handleDownloadStatusDialogClose">
+    <el-dialog :visible.sync="isDownloadStatusDialogVisible" width="40%" :before-close="handleDownloadStatusDialogClose"
+      style="background-color: white;" title="下载状态">
       <el-table :data="downloadStatusList" style="width: 100%" align="center">
         <el-table-column prop="projectId" label="项目ID" width="120"></el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -88,8 +89,12 @@ import app from '@/api/appwx';
 import db from '@/api/database';
 import * as XLSX from 'xlsx';
 import { Loading, Message } from 'element-ui';
+import MyLoadingIndicator from '../../components/MyLoadingIndicator.vue'
 
 export default {
+  components: {
+    MyLoadingIndicator,
+  },
   data() {
     return {
       rows: [],
@@ -148,7 +153,10 @@ export default {
       if (!this.search.selectedDate) return; // 如果没有选择日期，则不执行操作
 
       this.fetchingInfo = true;
-      let loadingInstance = this.$loading({ fullscreen: true, text: '正在获取问卷信息...' });
+
+      // let loadingInstance = this.$loading({ fullscreen: true, text: '正在获取问卷信息...' });
+      this.isLoading = true;
+
       let page = 1;
       const token = localStorage.getItem('wenjvanjiToken');
       const selectedDate = this.search.selectedDate; // 使用选定的日期进行数据获取
@@ -196,7 +204,8 @@ export default {
       } catch (error) {
         console.error('获取问卷信息时出错:', error);
       } finally {
-        loadingInstance.close();
+        this.isLoading = false;
+        // loadingInstance.close();
         this.fetchingInfo = false;
       }
     },
@@ -446,7 +455,8 @@ export default {
     },
 
     async updateSingleDayInfo() {
-      let loadingInstance = Loading.service({ fullscreen: true, text: '正在更新数据...' });
+      // let loadingInstance = Loading.service({ fullscreen: true, text: '正在更新数据...' });
+      this.isLoading = true;
 
       // 为每条数据添加price字段和settlementStatus字段
       const updatedRows = this.rows.map(row => ({
@@ -489,7 +499,8 @@ export default {
         console.error('更新单日信息出错:', error);
         this.$message.error('数据更新失败');
       } finally {
-        loadingInstance.close();
+        // loadingInstance.close();
+        this.isLoading = false;
       }
     },
 
