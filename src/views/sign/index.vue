@@ -3,72 +3,46 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on"
       label-position="left">
       <!-- 注册表单 -->
-
       <div class="title-container">
         <!-- 注册标题 -->
-        <h1 class="title">注册</h1>
+        <h1 class="title">{{ issign ? "注册" : "更新信息" }}</h1>
       </div>
-
       <el-form-item prop="name">
         <!-- 姓名输入框 -->
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
-        <el-input ref="name" v-model="loginForm.name" placeholder="请输入您的姓名" name="name" type="text" tabindex="1"
+        <el-input ref="name" v-model="loginForm.name" placeholder="请输入您的支付宝姓名，用于打款" name="name" type="text" tabindex="1"
           auto-complete="on" />
       </el-form-item>
-
-      <el-form-item prop="unit">
-        <!-- 单位选择框 -->
-        <span class="svg-container">
-          <svg-icon icon-class="unit" />
-        </span>
-        <el-select style="width: 300px;" filterable ref="unit" v-model="loginForm.unit" placeholder="请选择您的单位" name="unit"
-          type="text" tabindex="1" auto-complete="on">
-          <el-option v-for="item in unitList" :key="item._id"
-            :label="item.data.unitName + (item.data.status ? '' : '（未审核）')" :value="item._id">
-          </el-option>
-        </el-select>
-        <span class="show-pwd" @click="dialogFormVisible = true">
-          <!-- 显示/隐藏密码图标 -->
-          <el-button slot="unit" style="color: #abc2cf;background-color: #2d3a4b;border: #889aa4;">申请新单位</el-button>
-        </span>
-      </el-form-item>
-
-      <el-form-item prop="position">
-        <!-- 职位选择框 -->
-        <span class="svg-container">
-          <svg-icon icon-class="unit" />
-        </span>
-        <el-select style="width: 300px;" filterable ref="position" v-model="loginForm.position" placeholder="请选择您的职位"
-          name="unit" type="text" tabindex="1" auto-complete="on">
-          <el-option v-for="item in positionList" :key="item.value" :label="item.label" :value="item.value">
-          </el-option>
-        </el-select>
-      </el-form-item>
-
       <el-form-item prop="username">
-        <!-- 用户名输入框 -->
+        <!-- 用户名 电话 输入框 -->
         <span class="svg-container">
           <svg-icon icon-class="phone" />
         </span>
-        <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
+        <el-input ref="username" v-model="loginForm.username" placeholder="请输入您的支付宝手机号，用于打款" name="username" type="text"
           tabindex="1" auto-complete="on" />
       </el-form-item>
-
+      <el-form-item prop="wenjvan">
+        <!-- 问卷 电话 输入框 -->
+        <span class="svg-container">
+          <svg-icon icon-class="phone" />
+        </span>
+        <el-input ref="wenjvan" v-model="loginForm.wenjvan" placeholder="请输入您填写问卷时使用的手机号，请使用固定手机号回答问卷" name="wenjvan"
+          type="text" tabindex="1" auto-complete="on" />
+      </el-form-item>
       <el-form-item prop="password">
         <!-- 密码输入框 -->
         <span class="svg-container">
           <svg-icon icon-class="password" />
         </span>
-        <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType" placeholder="请输入密码"
-          name="password" tabindex="2" auto-complete="on" @keyup.enter.native="handleLogin" />
+        <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType"
+          placeholder="请输入密码" name="password" tabindex="2" auto-complete="on" @keyup.enter.native="handleLogin" />
         <span class="show-pwd" @click="showPwd">
           <!-- 显示/隐藏密码图标 -->
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
-
       <el-form-item prop="anginPassword">
         <!-- 密码输入框 -->
         <span class="svg-container">
@@ -81,97 +55,45 @@
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
-
-      <!-- 验证码
-      <el-form-item prop="code">
-        <span class="svg-container">
-          <svg-icon icon-class="email" />
-        </span>
-        <el-input :key="passwordType" ref="code" v-model="loginForm.password" :type="passwordType" placeholder="请输入验证码"
-          name="password" tabindex="2" auto-complete="on" />
-        <span class="show-pwd" @click="sendCode">
-          <el-button v-show="timeTrue == true" slot="append"
-            style="color: #abc2cf;background-color: #2d3a4b;border: #889aa4;">点击发送</el-button>
-          <el-button v-show="timeTrue == false" slot="append"
-            style="color: #abc2cf;background-color: #2d3a4b;border: #889aa4;">{{ time }}秒后重新获取</el-button>
-        </span>
-      </el-form-item> -->
-
       <div style="display: flex; flex-direction: column;">
         <div style="margin-bottom: 10px;">
-          <el-button :loading="loading" type="primary" style="width: 100%;"
-            @click.native.prevent="applySign">提交注册申请</el-button>
+          <el-button :loading="loading" type="primary" style="width: 100%;" @click.native.prevent="applySign">{{ issign
+      ? "提交注册" : "确认更新" }}</el-button>
         </div>
       </div>
-
       <div style="display: flex; flex-direction: column;">
         <div style="margin-bottom: 10px;">
-          <el-button plain :loading="loading" type="primary" style="width: 100%;"
-            @click.native.prevent="handleBack">返回登录</el-button>
+          <el-button plain :loading="loading" type="primary" style="width: 100%;" @click.native.prevent="handleBack">{{
+      issign ? "返回登录" : "返回个人中心" }}</el-button>
         </div>
       </div>
-
       <div class="tips">
         <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span>
       </div>
-
     </el-form>
-
-    <el-dialog custom-class="dialog" title="单位注册" style="width:auto" :visible.sync="dialogFormVisible" center>
-      <div class="login-container">
-        <el-form style="padding: 15px 0 30px;width:400px" ref="unitform" :model="unitform" :rules="unitRules"
-          class="login-form" auto-complete="on" label-position="left">
-          <el-form-item prop="unitName">
-            <!-- 单位名称输入框 -->
-            <span class="svg-container">
-              <svg-icon icon-class="unit" />
-            </span>
-            <el-input ref="unitName" v-model="unitform.unitName" placeholder="请输入单位名称" name="unitName" type="text"
-              tabindex="1" auto-complete="on" />
-          </el-form-item>
-
-          <el-form-item prop="head">
-            <!-- 负责人姓名输入框 -->
-            <span class="svg-container">
-              <svg-icon icon-class="user" />
-            </span>
-            <el-input ref="head" v-model="unitform.head" placeholder="请输入负责人姓名" name="head" type="text" tabindex="1"
-              auto-complete="on" />
-          </el-form-item>
-
-          <el-form-item prop="unitPhone">
-            <!-- 负责人电话输入框 -->
-            <span class="svg-container">
-              <svg-icon icon-class="phone" />
-            </span>
-            <el-input ref="unitPhone" v-model="unitform.unitPhone" placeholder="请输入负责人电话" name="unitPhone" type="text"
-              tabindex="1" auto-complete="on" />
-          </el-form-item>
-
-          <div style="display: flex; flex-direction: column;">
-            <div style="margin-bottom: 10px;">
-              <el-button :loading="loading" type="primary" style="width: 100%;"
-                @click.native.prevent="signUnit">提交注册申请</el-button>
-            </div>
-          </div>
-
-        </el-form>
-      </div>
-    </el-dialog>
-
   </div>
 </template>
 
 <script>
 
-import { validUsername } from '@/utils/validate'
 import db from '@/api/database';
+import { Message } from 'element-ui';
+
 
 export default {
   name: 'Sign',
   data() {
-
     const validateUsername = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请输入您的手机号'))
+      }
+      else if (value.length !== 11) {
+        callback(new Error('请输入正确的手机号'))
+      } else {
+        callback()
+      }
+    }
+    const validateWenjvan = (rule, value, callback) => {
       if (!value) {
         callback(new Error('请输入您的手机号'))
       }
@@ -202,94 +124,28 @@ export default {
         callback()
       }
     }
-    const validatePosition = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请选择您的职位'))
-      } else {
-        callback()
-      }
-    }
     const validateName = (rule, value, callback) => {
       if (!value) {
-        callback(new Error('请输入您的姓名'))
-      } else {
-        callback()
-      }
-    }
-    const validateUnit = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请选择您所在的单位'))
-      } else {
-        callback()
-      }
-    }
-    const validateCode = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请获取并输入验证码'))
-      } else {
-        callback()
-      }
-    }
-    const validateUnitName = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请输入单位名称'))
-      } else {
-        callback()
-      }
-    }
-    const validateHead = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请获取并输入负责人姓名'))
-      } else {
-        callback()
-      }
-    }
-    const validateUnitPhone = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请输入您的手机号'))
-      }
-      else if (value.length !== 11) {
-        callback(new Error('请输入正确的手机号'))
+        callback(new Error('请输入您的支付宝姓名'))
       } else {
         callback()
       }
     }
     return {
-      positionList: [ //职位列表
-        { value: '0', label: '单位负责人' },
-        { value: '1', label: '员工' },
-      ],
-      unitList: null,//单位列表
-      dialogFormVisible: false, //弹出框
-      timeTrue: true, //是否有验证码倒计时
-      time: 0, //验证码倒计时
+      issign: true,
       loginForm: {
         name: '',
-        unit: '',
         username: '',
+        wenjvan: '',
         password: '',
         anginPassword: '',
-        position: ''
-      },
-      unitform: {
-        unitName: '',
-        head: '',
-        unitPhone: '',
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }],
         anginPassword: [{ required: true, trigger: 'blur', validator: validateAnginPassword }],
         name: [{ required: true, trigger: 'blur', validator: validateName }],
-        unit: [{ required: true, trigger: 'blur', validator: validateUnit }],
-        code: [{ required: true, trigger: 'blur', validator: validateCode }],
-        position: [{ required: true, trigger: 'blur', validator: validatePosition }],
-
-      },
-      unitRules: {
-        unitName: [{ required: true, trigger: 'blur', validator: validateUnitName }],
-        head: [{ required: true, trigger: 'blur', validator: validateHead }],
-        unitPhone: [{ required: true, trigger: 'blur', validator: validateUnitPhone }],
+        wenjvan: [{ required: true, trigger: 'blur', validator: validateWenjvan }],
       },
       loading: false,
       passwordType: 'password',
@@ -305,9 +161,36 @@ export default {
     }
   },
   created() {
-    this.getUnitList()
+    // 获取路由参数中的用户 ID
+    const userId = this.$route.query.userId;
+    if (userId) {
+      console.log('User ID:', userId);
+      this.issign = false;
+      this.getUserInfo(userId)
+    }
   },
   methods: {
+    getUserInfo(userId) {
+      // 根据用户ID从数据库获取用户信息
+      db.collection("users").doc(userId).get().then((res) => {
+        console.log("res", res)
+        if (res.data) {
+          this.loginForm.name = res.data[0].data.payname;
+          this.loginForm.username = res.data[0].data.payphone;
+          this.loginForm.wenjvan = res.data[0].data.wenjvan;
+          this.loginForm.password = res.data[0].data.password;
+          this.loginForm.anginPassword = res.data[0].data.password;
+          console.log("this.userInfo", this.userInfo)
+          // 显示登录成功消息提示
+          Message.success('获取用户信息成功');
+        } else {
+          Message.error('获取用户信息失败');
+        }
+      }).catch((err) => {
+        console.error("获取用户信息失败：", err);
+        Message.error('登录时发生错误');
+      });
+    },
     startLoading() {
       const loading = this.$loading({
         lock: true,
@@ -320,30 +203,6 @@ export default {
     endLoading(loading) {
       loading.close();
     },
-    getUnitList() {
-      console.log("getUnitList")
-      db.collection("UNIT")
-        .get()
-        .then(res => {
-          console.log(res)
-          this.unitList = res.data
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    },
-    //发送验证码
-    sendCode() {
-      this.timeTrue = false;
-      this.time = 60;
-      var setTimeoutS = setInterval(() => {
-        this.time--;
-        if (this.time <= 0) {
-          clearInterval(setTimeoutS);
-          this.timeTrue = true;
-        }
-      }, 1000);
-    },
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
@@ -354,82 +213,95 @@ export default {
         this.$refs.password.focus()
       })
     },
-    // 提交注册单位
-    signUnit() {
-      this.$refs.unitform.validate(valid => {
-        if (valid) {
-          this.startLoading(); // 打开loading
-          console.log(this.unitform)
-          console.log(this.formatDateTime())
-          db.collection("UNIT")
-            .add({
-              data: {
-                unitName: this.unitform.unitName,
-                head: this.unitform.head,
-                unitPhone: this.unitform.unitPhone,
-                createTime: this.formatDateTime(),
-                status: false,
-                identity: 0
-              }
-            })
-            .then(res => {
-              console.log(res)
-              this.endLoading(this.startLoading()); // 关闭loading
-              this.$message({
-                message: '提交成功，请等待审核',
-                type: 'success'
-              });
-              this.dialogFormVisible = false
-            })
-            .catch(err => {
-              console.log(err)
-              this.endLoading(this.startLoading()); // 关闭loading
-              this.$message.error('提交失败', err);
-            })
-        } else {
-          this.$message.error('请填写完整信息');
-          return false
-        }
-      })
-    },
     applySign() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          this.loading = true
-          console.log(this.loginForm, "loginForm")
-          db.collection("PERSONNEL")
-            .add({
-              data: {
-                name: this.loginForm.name,
-                unit: this.loginForm.unit,
-                phone: this.loginForm.username,
-                password: this.loginForm.password,
-                createTime: this.formatDateTime(),
-                status: false,
-                position: this.loginForm.position,
-                identity: 1
-              }
-            })
-            .then(res => {
-              console.log(res)
-              this.loading = false
-              this.$message({
-                message: '提交成功，请等待审核',
-                type: 'success'
+          this.loading = true;
+
+          if (this.issign) {
+            // 查询数据库是否存在相同手机号的用户
+            db.collection("users")
+              .where({
+                "data.phone": this.loginForm.username
+              })
+              .get()
+              .then(res => {
+                if (res.data.length > 0) {
+                  // 已经注册过的情况
+                  this.loading = false;
+                  this.$message.error('该手机号已经注册过，请使用其他手机号注册');
+                } else {
+                  // 未注册过的情况，进行注册
+                  db.collection("users")
+                    .add({
+                      data: {
+                        payname: this.loginForm.name,
+                        payphone: this.loginForm.username,
+                        password: this.loginForm.password,
+                        wenjvan: this.loginForm.wenjvan,
+                        down: 0,
+                        issued: 0,
+                        unissued: 0,
+                        createTime: this.formatDateTime(),
+                      }
+                    })
+                    .then(res => {
+                      this.loading = false;
+                      this.$message({
+                        message: '注册成功',
+                        type: 'success'
+                      });
+                      this.$router.push('/login');
+                    })
+                    .catch(err => {
+                      this.loading = false;
+                      console.error(err);
+                      this.$message.error('注册失败，请稍后重试');
+                    });
+                }
+              })
+              .catch(err => {
+                this.loading = false;
+                console.error(err);
+                this.$message.error('注册失败，请稍后重试');
               });
-              this.$router.push('/login');
-            })
-            .catch(err => {
-              this.loading = false
-              console.log(err)
-              this.$message.error('提交失败', err);
-            })
+          } else {
+            db.collection("users")
+              .where({
+                "data.phone": this.loginForm.username
+              })
+              .update({
+                data: {
+                  payname: this.loginForm.name,
+                  phone: this.loginForm.username,
+                  payphone: this.loginForm.username,
+                  password: this.loginForm.password,
+                  wenjvan: this.loginForm.wenjvan,
+                  updateTime: this.formatDateTime(),
+                }
+              })
+              .then(res => {
+                console.log(res)
+                this.loading = false;
+                this.$message({
+                  message: '更新成功',
+                  type: 'success'
+                });
+                this.$router.push('/login');
+              })
+              .catch(err => {
+                this.loading = false;
+                console.error(err);
+                this.$message.error('更新失败，请稍后重试');
+              });
+          }
         } else {
-          this.$message.error('请填写完整信息')
-          return false
+          this.$message.error('请填写完整信息');
+          return false;
         }
-      })
+      });
     },
+
     // 返回登录
     handleBack() {
       console.log('handleSign')

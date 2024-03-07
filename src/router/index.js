@@ -247,7 +247,7 @@ export function resetRouter() {
 router.beforeEach((to, from, next) => {
   // 假设有一个函数isUserLoggedIn()来检查用户是否登录
   const isLoggedin = isUserLoggedIn(); // 这需要你根据实际情况实现
-  if (!isLoggedin && to.path !== '/login') {
+  if (!isLoggedin && to.path !== '/login' && to.path !== '/sign') {
     // 如果用户未登录并且目标路径不是登录页，则重定向到登录页
     next('/login');
   } else {

@@ -1,6 +1,6 @@
 import defaultSettings from '@/settings'
 
-const title = defaultSettings.title || 'Vue Admin Template'
+const title = '开言调查个人中心'
 
 export default function getPageTitle(pageTitle) {
   if (pageTitle) {

@@ -1,66 +1,142 @@
 <template>
   <div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on"
-      label-position="left">
-      <!-- 登录表单 -->
 
-      <div class="title-container">
-        <!-- 登录标题 -->
-        <h1 class="title">开言调查后台管理系统</h1>
-      </div>
-
-      <el-form-item prop="username">
-        <!-- 用户名输入框 -->
-        <span class="svg-container">
-          <svg-icon icon-class="user" />
-        </span>
-        <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
-          tabindex="1" auto-complete="on" @keyup.enter.native="handleLogin" />
-      </el-form-item>
-
-      <el-form-item prop="password">
-        <!-- 密码输入框 -->
-        <span class="svg-container">
-          <svg-icon icon-class="password" />
-        </span>
-        <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType" placeholder="请输入密码"
-          name="password" tabindex="2" auto-complete="on" @keyup.enter.native="handleLogin" />
-        <span class="show-pwd" @click="showPwd">
-          <!-- 显示/隐藏密码图标 -->
-          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
-        </span>
-      </el-form-item>
-
-      <el-form-item prop="captcha" class="captcha-container">
-        <!-- 验证码输入框 -->
-        <span class="svg-container">
-          <svg-icon icon-class="captcha" />
-        </span>
-        <el-input ref="captcha" v-model="loginForm.captcha" placeholder="请输入验证码" name="captcha" tabindex="3"
-          auto-complete="on" @keyup.enter.native="handleLogin" class="captcha-input" />
-        <img :src="captchaImageSrc" alt="验证码" @click="getCaptcha" class="captcha-image">
-      </el-form-item>
-
-      <div style="display: flex; flex-direction: column;">
-        <div style="margin-bottom: 10px;">
-          <el-button :loading="loading" type="primary" style="width: 100%;"
-            @click.native.prevent="handleLogin">登录</el-button>
+    <!-- 如果用户已登录，显示个人信息 -->
+    <div v-if="loggedIn">
+      <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on"
+        label-position="left">
+        <!-- 登录表单 -->
+        <div class="title-container">
+          <!-- 登录标题 -->
+          <h1 class="title">开言调查个人中心</h1>
         </div>
-      </div>
 
-      <div class="tips">
-        <!-- 提示 -->
-        <span style="margin-right:20px;">点击验证码图片可以换一张哦~</span>
-      </div>
+        <el-row :gutter="10">
+          <el-col :span="11">
+            <!-- 问卷手机号展示卡片 -->
+            <!-- <el-card shadow="hover" style="width: 100%; margin-bottom: 20px;">
+              <div style="width: 100%; ">
+                <div style="display: flex;">
+                  <h3 style="margin-top: 5px;margin-right:  10px;margin-bottom: 0px;">欢迎你</h3>
+                </div>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">{{ userInfo.payname }}</h5>
+              </div>
+            </el-card> -->
+            <!-- 问卷手机号展示卡片 -->
+            <el-card shadow="hover" style="width: 100%; margin-bottom: 20px;">
+              <div style="width: 100%; ">
+                <div style="display: flex;">
+                  <h3 style="margin-top: 5px;margin-right:  10px;margin-bottom: 0px;">问卷手机号</h3>
+                </div>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">{{ userInfo.wenjvan }}</h5>
+              </div>
+            </el-card>
+            <!-- 提现信息展示卡片 -->
+            <el-card shadow="hover" style="width: 100%; margin-bottom: 20px;">
+              <div style="width: 100%; ">
+                <div style="display: flex;">
+                  <h3 style="margin-top: 5px;margin-right:  10px;margin-bottom: 0px;">提现信息</h3>
+                </div>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">姓名：{{ userInfo.payname }}</h5>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">手机号：{{ userInfo.phone }}</h5>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :span="13">
+            <el-card shadow="hover" style="width: 100%; margin-bottom: 20px;">
+              <div style="width: 100%; ">
+                <div style="display: flex;">
+                  <h3 style="margin-top: 5px;margin-right:  10px;margin-bottom: 0px;">薪资信息</h3>
+                </div>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">已完成问卷：{{ userInfo.down }}份</h5>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">待结算：{{ userInfo.issued }}元</h5>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">已结算：{{ userInfo.unissued }}元</h5>
+              </div>
+            </el-card>
+            <el-card shadow="hover" style="width: 100%; margin-bottom: 20px;">
+              <div style="width: 100%; ">
+                <div style="display: flex;">
+                  <h3 style="margin-top: 5px;margin-right:  10px;margin-bottom: 0px;">客服信息</h3>
+                </div>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">QQ：xxxxxxxxxx</h5>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">微信：xxxxxxxxxx</h5>
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
 
-    </el-form>
+        <div style="display: flex; flex-direction: column;">
+          <div style="margin-top: 10px;">
+            <el-button :loading="false" type="warning" style="width: 100%;" @click="gosign">修改</el-button>
+          </div>
+          <div style="margin-bottom: 20px;margin-top: 10px;">
+            <el-button plain :loading="false" type="primary" style="width: 100%;" @click="logout">退出</el-button>
+          </div>
+        </div>
+        <div class="tips">
+          <!-- 用户名和密码提示 -->
+          <!-- <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span> -->
+        </div>
+      </el-form>
+
+
+
+    </div>
+    <!-- 如果用户未登录，显示登录表单 -->
+    <div v-else>
+      <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on"
+        label-position="left">
+        <!-- 登录表单 -->
+        <div class="title-container">
+          <!-- 登录标题 -->
+          <h1 class="title">开言调查个人中心</h1>
+        </div>
+        <el-form-item prop="username">
+          <!-- 用户名输入框 -->
+          <span class="svg-container">
+            <svg-icon icon-class="user" />
+          </span>
+          <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
+            tabindex="1" auto-complete="on" />
+        </el-form-item>
+        <el-form-item prop="password">
+          <!-- 密码输入框 -->
+          <span class="svg-container">
+            <svg-icon icon-class="password" />
+          </span>
+          <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType"
+            placeholder="请输入密码" name="password" tabindex="2" auto-complete="on" @keyup.enter.native="handleLogin" />
+          <span class="show-pwd" @click="showPwd">
+            <!-- 显示/隐藏密码图标 -->
+            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          </span>
+        </el-form-item>
+        <el-checkbox style="margin-left: 10px;margin-bottom: 20px; color: #fff;"
+          v-model="rememberPassword">记住密码</el-checkbox>
+        <div style="display: flex; flex-direction: column;">
+          <div style="margin-bottom: 10px;">
+            <el-button :loading="loading" type="primary" style="width: 100%;"
+              @click.native.prevent="handleLogin">登录</el-button>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <el-button plain :loading="false" type="primary" style="width: 100%;"
+              @click.native.prevent="handleSign">注册</el-button>
+          </div>
+        </div>
+        <div class="tips">
+          <!-- 用户名和密码提示 -->
+          <span style="margin-right:20px;">请务必确保提交的信息准确无误，如有错误，请联系客服处理</span>
+        </div>
+      </el-form>
+    </div>
   </div>
 </template>
 
 <script>
-// import { validUsername } from '@/utils/validate'
+import { validUsername } from '@/utils/validate'
 import db from '@/api/database';
 import app from '@/api/appwx';
+import { Message } from 'element-ui';
 
 export default {
   name: 'Login',
@@ -79,29 +155,40 @@ export default {
         callback()
       }
     }
-    const validateCaptcha = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请输入验证码'))
-      } else {
-        callback()
-      }
-    }
     return {
-      captchaImageSrc: '',
-      captchaId: '',
+      dialogFormVisible: false,
+
+      loggedIn: false,
+      userInfo: {}, // 用户信息
+      withdrawalInfo: {}, // 提现信息
+      rememberPassword: false, // 是否记住密码
       loginForm: {
         username: null,
-        password: null,
-        captcha: null
+        password: null
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
-        captcha: [{ required: true, trigger: 'blur', validator: validateCaptcha }]
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
       passwordType: 'password',
       redirect: undefined
+    }
+  },
+  created() {
+    const userSession = JSON.parse(localStorage.getItem('userSession'));
+    const loginForm = JSON.parse(localStorage.getItem('loginForm'));
+    console.log('userSession', userSession)
+    console.log('loginForm', loginForm)
+    if (userSession && userSession.loggedIn) {
+      this.loggedIn = true;
+      // 从数据库获取用户信息
+      this.getUserInfo(userSession.userId); // 修改这里，传入用户ID
+    }
+    if (loginForm.username && loginForm.password) {
+      this.loginForm.username = loginForm.username;
+      this.loginForm.password = loginForm.password;
+      this.rememberPassword = true;
     }
   },
   watch: {
@@ -112,30 +199,17 @@ export default {
       immediate: true
     }
   },
-  created() {
-    this.getCaptcha();
-  },
   methods: {
-    // 获取验证码
-    getCaptcha() {
-      app.callFunction({
-        name: "getUrl",
-        data: {
-          url: 'http://i.wenjuanji.com/api/v1/Captcha/Image'
-        }
-      })
-        .then((res) => {
-          console.log("获取验证码成功", res)
-          const result = JSON.parse(res.result); // Parse the JSON string in the result
-          if (result && result.success) {
-            // Set the captchaImageSrc to the base64 image source
-            this.captchaImageSrc = `data:image/png;base64,${result.data.base64}`;
-            this.captchaId = result.data.id;
-          }
-        })
-        .catch(console.error);
+    editWithdrawalInfo() {
+      console.log(this.editMode)
+      this.editMode = true;
     },
-    // 是否可见密码
+    confirmEdit() {
+      // 根据编辑模式更新对应字段
+      this.userInfo.name = this.editName;
+      this.userInfo.phone = this.editPhone;
+      this.editMode = false;
+    },
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
@@ -146,111 +220,85 @@ export default {
         this.$refs.password.focus()
       })
     },
-    // 使用问卷集进行登录
-    async loginWithCloudFunction(captcha) {
-      this.loading = true;
-      try {
-        console.log("captchaId:", this.captchaId);
-        console.log("captcha:", captcha);
-        const queryParams = new URLSearchParams({
-          name: "838583969@qq.com",
-          password: "wenjuanji1",
-          captchaId: this.captchaId,
-          captcha: captcha
-        });
-
-        const res = await app.callFunction({
-          name: "postUrl",
-          data: {
-            url: `http://i.wenjuanji.com/api/v1/Login?${queryParams.toString()}`
-          }
-        });
-
-        console.log("问卷集登录结果:", res);
-        const result = JSON.parse(res.result);
-        if (result && result.success) {
-          this.$message({
-            message: '问卷集登录成功',
-            type: 'success'
-          });
-          localStorage.setItem('wenjvanjiToken', result.data.token);
-          return result; // Make sure to return the result for further processing
+    getUserInfo(userId) {
+      // 根据用户ID从数据库获取用户信息
+      db.collection("users").doc(userId).get().then((res) => {
+        console.log("res", res)
+        if (res.data) {
+          this.userInfo = res.data[0].data;
+          console.log("this.userInfo", this.userInfo)
+          // 显示登录成功消息提示
+          Message.success('登录成功');
         } else {
-          this.$message({
-            message: '问卷集登录失败',
-            type: 'error'
-          });
-          this.getCaptcha(); // 刷新验证码
-          return null; // Return null or false to indicate failure
+          Message.error('获取用户信息失败');
         }
-      } catch (error) {
-        console.error('问卷集登录错误:', error);
-        this.$message({
-          message: '问卷集登录异常',
-          type: 'error'
-        });
-        this.getCaptcha(); // 刷新验证码
-      } finally {
-        this.loading = false; // 确保加载状态被终止
-      }
+      }).catch((err) => {
+        console.error("获取用户信息失败：", err);
+        Message.error('登录时发生错误');
+      });
     },
-    // 数据库登录
-    async handleLogin() {
-      console.log('login');
-      this.$refs.loginForm.validate(async (valid) => {
+    handleLogin() {
+      this.$refs.loginForm.validate(valid => {
         if (valid) {
-          // 验证本地数据库
-          const localLoginResult = await this.localLogin();
-          // 验证云函数
-          const cloudLoginResult = await this.loginWithCloudFunction(this.loginForm.captcha);
-
-          if (localLoginResult && cloudLoginResult) {
-            // 如果本地和云函数登录都成功，跳转到主页
-            this.$router.push({ path: this.redirect || '/' });
-          } else {
-            // 如果任何一个登录失败，显示错误并留在登录页
-            this.getCaptcha(); // 刷新验证码
-          }
+          this.loading = true;
+          // 登录验证逻辑
+          db.collection("users")
+            .aggregate()
+            .match({
+              "data.phone": this.loginForm.username,
+              "data.password": this.loginForm.password
+            })
+            .end()
+            .then((res) => {
+              console.log("res", res)
+              if (res.data.length > 0) {
+                this.loggedIn = true
+                // 登录成功，获取用户信息并存储到缓存中
+                const userId = res.data[0]._id; // 修改这里，获取用户ID
+                this.getUserInfo(userId);
+                const userSession = {
+                  loggedIn: true,
+                  userId: userId,
+                  rememberPassword: this.rememberPassword
+                };
+                let loginForm = null
+                if (this.rememberPassword) {
+                  // 如果选择记住密码，将账户密码也存入缓存
+                  userSession.rememberPassword = true;
+                  loginForm = {
+                    username: this.loginForm.username,
+                    password: this.loginForm.password
+                  };
+                }
+                // 将登录状态和用户ID存储到本地缓存中
+                localStorage.setItem('userSession', JSON.stringify(userSession));
+                localStorage.setItem('loginForm', JSON.stringify(loginForm));
+              } else {
+                Message.error('用户名或密码错误');
+              }
+              this.loading = false;
+            })
+            .catch((err) => {
+              console.error("查询失败：", err);
+              Message.error('登录时发生错误');
+              this.loading = false;
+            });
         } else {
-          this.$message({
-            message: '请完善登录信息',
-            type: 'error'
-          });
-          console.log('error submit!!');
+          console.log('error submit!!')
           return false;
         }
       });
     },
-    // 本地数据库验证逻辑
-    async localLogin() {
-      try {
-        const res = await db.collection("administrator")
-          .aggregate()
-          .match({
-            phone: this.loginForm.username,
-            password: this.loginForm.password
-          })
-          .end();
-        console.log("本地登录", res);
-        if (res.data.length > 0) {
-          console.log(res.data[0]._id);
-          this.storeLoginSession(res.data[0]._id);
-          return true; // 本地登录成功
-        } else {
-          this.$message({
-            message: '本地登录失败：用户名或密码错误',
-            type: 'error'
-          });
-          return false; // 本地登录失败
-        }
-      } catch (err) {
-        console.error("本地登录查询失败：", err);
-        this.$message({
-          message: '本地登录异常：网络错误或数据库问题',
-          type: 'error'
-        });
-        return false; // 本地登录异常
-      }
+    logout() {
+      // 清除用户会话和登录表单数据
+      localStorage.removeItem('userSession');
+
+      // 重置用户信息并将 loggedIn 设置为 false
+      this.userInfo = {};
+      this.loggedIn = false;
+
+      // 重定向到登录页面
+      this.$router.push('/login');
     },
     handleSign() {
       console.log('handleSign')
@@ -258,16 +306,13 @@ export default {
       this.redirect = undefined;
       this.$router.push('/sign');
     },
-    storeLoginSession(token) {
-      const now = new Date();
-      const item = {
-        loggedIn: true,
-        token: token, // 假设使用token作为登录凭证
-        expiry: now.getTime() + 3600000, // 当前时间 + 1小时的毫秒数
-      };
-      localStorage.setItem('userSession', JSON.stringify(item));
+    gosign() {
+      let userId = JSON.parse(localStorage.getItem('userSession')).userId
+      this.$router.push({
+        path: '/sign',
+        query: { userId: userId } // 将用户 ID 作为路由参数传递
+      });
     }
-
   }
 }
 </script>
@@ -335,7 +380,7 @@ $light_gray: #eee;
     position: relative;
     width: 500px;
     max-width: 100%;
-    padding: 160px 35px 0;
+    padding: 110px 35px 0;
     margin: 0 auto;
     overflow: hidden;
   }
@@ -385,24 +430,6 @@ $light_gray: #eee;
     color: $dark_gray;
     cursor: pointer;
     user-select: none;
-  }
-
-  .captcha-container {
-    display: flex;
-    align-items: center;
-
-    .captcha-input {
-      // cursor: pointer;
-      height: 30px; // 你可以根据需要调整大小
-      width: 290px;
-    }
-
-    .captcha-image {
-      // cursor: pointer;
-      margin-left: 10px;
-      transform: translateY(10px);
-      height: 35px; // 你可以根据需要调整大小
-    }
   }
 }
 </style>
