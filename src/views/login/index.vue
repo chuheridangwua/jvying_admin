@@ -38,7 +38,7 @@
                   <h3 style="margin-top: 5px;margin-right:  10px;margin-bottom: 0px;">提现信息</h3>
                 </div>
                 <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">姓名：{{ userInfo.payname }}</h5>
-                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">手机号：{{ userInfo.phone }}</h5>
+                <h5 style="margin-top: 15px;margin-right:  10px;margin-bottom: 0px;">手机号：{{ userInfo.payphone }}</h5>
               </div>
             </el-card>
           </el-col>
@@ -91,12 +91,12 @@
           <!-- 登录标题 -->
           <h1 class="title">开言调查个人中心</h1>
         </div>
-        <el-form-item prop="username">
+        <el-form-item prop="payphone">
           <!-- 用户名输入框 -->
           <span class="svg-container">
             <svg-icon icon-class="user" />
           </span>
-          <el-input ref="username" v-model="loginForm.username" placeholder="请输入手机号" name="username" type="text"
+          <el-input ref="payphone" v-model="loginForm.payphone" placeholder="请输入手机号" name="payphone" type="text"
             tabindex="1" auto-complete="on" />
         </el-form-item>
         <el-form-item prop="password">
@@ -133,7 +133,6 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
 import db from '@/api/database';
 import app from '@/api/appwx';
 import { Message } from 'element-ui';
@@ -141,7 +140,7 @@ import { Message } from 'element-ui';
 export default {
   name: 'Login',
   data() {
-    const validateUsername = (rule, value, callback) => {
+    const validatePayphone = (rule, value, callback) => {
       if (!value) {
         callback(new Error('请输入手机号'))
       } else {
@@ -163,11 +162,11 @@ export default {
       withdrawalInfo: {}, // 提现信息
       rememberPassword: false, // 是否记住密码
       loginForm: {
-        username: null,
+        payphone: null,
         password: null
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        payphone: [{ required: true, trigger: 'blur', validator: validatePayphone }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
@@ -185,8 +184,8 @@ export default {
       // 从数据库获取用户信息
       this.getUserInfo(userSession.userId); // 修改这里，传入用户ID
     }
-    if (loginForm.username && loginForm.password) {
-      this.loginForm.username = loginForm.username;
+    if (loginForm.payphone && loginForm.password) {
+      this.loginForm.payphone = loginForm.payphone;
       this.loginForm.password = loginForm.password;
       this.rememberPassword = true;
     }
@@ -245,7 +244,7 @@ export default {
           db.collection("users")
             .aggregate()
             .match({
-              "data.phone": this.loginForm.username,
+              "data.payphone": this.loginForm.payphone,
               "data.password": this.loginForm.password
             })
             .end()
@@ -266,7 +265,7 @@ export default {
                   // 如果选择记住密码，将账户密码也存入缓存
                   userSession.rememberPassword = true;
                   loginForm = {
-                    username: this.loginForm.username,
+                    payphone: this.loginForm.payphone,
                     password: this.loginForm.password
                   };
                 }
