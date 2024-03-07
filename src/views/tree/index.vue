@@ -1,133 +1,109 @@
 <template>
-  <div>
-      <ve-table
-          rowKeyFieldName="rowKey"
-          :fixed-header="true"
-          :columns="columns"
-          :table-data="tableData"
-          :editOption="editOption"
-          :rowStyleOption="rowStyleOption"
-          border-y
-      />
-  </div>
+    <div style="margin: 30px 50px;">
+        <el-date-picker style="margin-bottom: 20px;" v-model="selectedDate" type="date" placeholder="选择日期" format="yyyy 年 MM 月 dd 日"
+            value-format="yyyy-MM-dd">
+        </el-date-picker>
+        <el-button type="primary" @click="fetchDataByDate" style="margin-left: 10px;">查找</el-button>
+        <el-table :data="completedProjects" style="width: 100%" border highlight-current-row
+            :default-sort="{ prop: '完成时间', order: 'descending' }">
+            <el-table-column type="index" label="序号" width="50"></el-table-column>
+            <el-table-column prop="调查ID" label="调查ID" width="100"></el-table-column>
+            <el-table-column prop="调查名称" label="调查名称"></el-table-column>
+            <el-table-column prop="价格" label="价格" width="80" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success">{{ scope.row.价格 }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="会员ID" label="会员ID" width="300"></el-table-column>
+            <el-table-column prop="手机号码" label="手机号码" width="120"></el-table-column>
+            <el-table-column prop="状态" label="状态" width="100" sortable>
+                <template slot-scope="scope">
+                    <el-tag :type="getStatusTagType(scope.row.状态)">{{ scope.row.状态 }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="结算" label="结算" width="90" sortable>
+                <template slot-scope="scope">
+                    <el-tag v-if="scope.row.结算" type="success">已结算</el-tag>
+                    <el-tag v-else type="danger">未结算</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="完成时间" label="完成时间" width="170" sortable></el-table-column>
+        </el-table>
+
+    </div>
 </template>
 
+
 <script>
-  export default {
-      data() {
-          return {
-              rowStyleOption: {
-                  clickHighlight: false,
-                  hoverHighlight: false,
-              },
-              // edit option 可控单元格编辑
-              editOption: {
-                  beforeStartCellEditing: ({ row, column, cellValue }) => {
-                      console.log("beforeStartCellEditing");
-                      console.log("row::", row);
-                      console.log("column::", column);
-                      console.log("cellValue::", cellValue);
-                      console.log("---");
-                  },
-                  beforeCellValueChange: ({ row, column, changeValue }) => {
-                      console.log("beforeCellValueChange");
-                      console.log("row::", row);
-                      console.log("column::", column);
-                      console.log("changeValue::", changeValue);
-                      console.log("---");
-                  },
-                  afterCellValueChange: ({ row, column, changeValue }) => {
-                      console.log("afterCellValueChange");
-                      console.log("row::", row);
-                      console.log("column::", column);
-                      console.log("changeValue::", changeValue);
-                      console.log("---");
-                  },
-              },
-              columns: [
-                  {
-                      field: "",
-                      key: "a",
-                      title: "",
-                      width: 50,
-                      align: "center",
-                      operationColumn: true,
-                      renderBodyCell: ({ row, column, rowIndex }, h) => {
-                          return ++rowIndex;
-                      },
-                  },
-                  {
-                      field: "name",
-                      key: "name",
-                      title: "Name",
-                      align: "left",
-                      width: "15%",
-                      edit: true,
-                  },
-                  {
-                      field: "date",
-                      key: "date",
-                      title: "Date",
-                      align: "left",
-                      width: "15%",
-                      edit: true,
-                  },
-                  {
-                      field: "number",
-                      key: "number",
-                      title: "Number",
-                      align: "right",
-                      width: "30%",
-                      edit: true,
-                  },
-                  {
-                      field: "address",
-                      key: "address",
-                      title: "Address",
-                      align: "left",
-                      width: "40%",
-                      edit: true,
-                  },
-              ],
-              // table data
-              tableData: [
-                  {
-                      name: "You can't edit",
-                      date: "1900-05-20",
-                      number: "32",
-                      address: "No.1 Century Avenue, Shanghai",
-                      rowKey: 0,
-                  },
-                  {
-                      name: "Dickerson",
-                      date: "1910-06-20",
-                      number: "676",
-                      address: "No.1 Century Avenue, Beijing",
-                      rowKey: 1,
-                  },
-                  {
-                      name: "Larsen",
-                      date: "2000-07-20",
-                      number: "76",
-                      address: "No.1 Century Avenue, Chongqing",
-                      rowKey: 2,
-                  },
-                  {
-                      name: "Geneva",
-                      date: "2010-08-20",
-                      number: "7797",
-                      address: "No.1 Century Avenue, Xiamen",
-                      rowKey: 3,
-                  },
-                  {
-                      name: "Jami",
-                      date: "2020-09-20",
-                      number: "8978",
-                      address: "No.1 Century Avenue, Shenzhen",
-                      rowKey: 4,
-                  },
-              ],
-          };
-      },
-  };
+import db from '@/api/database';
+
+export default {
+    name: 'TreeIndex',
+    data() {
+        return {
+            completedProjects: [],
+            selectedDate: this.formatDate(new Date()) // 使用格式化方法初始化为当前日期
+        };
+    },
+    mounted() {
+        this.fetchDataByDate(); // 初次加载时获取今天的数据
+    },
+    methods: {
+        getStatusTagType(status) {
+            switch (status) {
+                case '成功完成':
+                    return 'success';
+                case '配额满':
+                    return 'info';
+                case '被甄别':
+                    return 'danger';
+                default:
+                    return 'warning';
+            }
+        },
+        fetchDataByDate() {
+            let loadingInstance = this.$loading({ // 开始加载数据时显示加载动画
+                lock: true,
+                text: '正在加载...',
+                spinner: 'el-icon-loading',
+                background: 'rgba(255, 255, 255, 0.7)'
+            });
+            console.log("selectedDate", this.selectedDate);
+            const query = db.collection("settlementData");
+            query.where({
+                "data.date": this.selectedDate
+            }).get().then(res => {
+                console.log(res, "res");
+                this.completedProjects = res.data.flatMap(item => item.data.rows.map(project => ({
+                    调查ID: project['调查ID'], // 映射字段
+                    调查名称: project['调查名称'], // 映射字段
+                    价格: project['price'], // 映射字段
+                    会员ID: project['会员ID'], // 映射字段
+                    手机号码: project['手机号码'], // 映射字段
+                    状态: project['状态'], // 映射字段
+                    结算: project['settlementStatus'], // 映射字段
+                    完成时间: project['完成时间'] // 映射字段
+                })));
+                console.log(this.completedProjects, "completedProjects");
+            }).catch(err => {
+                console.error(err);
+            }).finally(() => {
+                loadingInstance.close(); // 数据处理完成后关闭加载动画
+            });
+        },
+        formatDate(date) {
+            let month = '' + (date.getMonth() + 1),
+                day = '' + date.getDate(),
+                year = date.getFullYear();
+
+            if (month.length < 2)
+                month = '0' + month;
+            if (day.length < 2)
+                day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+    }
+
+};
 </script>

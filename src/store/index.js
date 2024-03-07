@@ -8,10 +8,29 @@ import user from './modules/user'
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
+  state: {},
+  mutations: {},
+  actions: {},
   modules: {
     app,
     settings,
-    user
+    user,
+    
+    projects: {
+      state: {
+        completedProjects: []
+      },
+      mutations: {
+        setCompletedProjects(state, projects) {
+          state.completedProjects = projects;
+        }
+      },
+      actions: {
+        updateCompletedProjects({ commit }, projects) {
+          commit('setCompletedProjects', projects);
+        }
+      }
+    }
   },
   getters
 })

@@ -1,6 +1,10 @@
 <template>
   <div class="projects-container">
-    <el-table :data="projectList" style="width: 100%" height="76vh" border>
+    <el-select v-model="isDomestic" @change="fetchProjects(1)" placeholder="请选择" style="margin-bottom: 20px;">
+      <el-option label="国内" :value="true"></el-option>
+      <el-option label="海外" :value="false"></el-option>
+    </el-select>
+    <el-table :data="projectList" style="width: 100%" height="90vh" border>
       <el-table-column label="序号" width="60">
         <template slot-scope="scope">
           {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
@@ -10,8 +14,11 @@
       <el-table-column prop="number" label="项目编号" width="180"></el-table-column>
       <el-table-column prop="title" label="问卷名称"></el-table-column>
       <el-table-column label="状态" width="120">
+
         <template slot-scope="scope">
-          {{ scope.row.status === 0 ? '进行中' : '暂停' }}
+          <el-tag :type="scope.row.status === 0 ? 'success' : 'danger'">
+            {{ scope.row.status === 0 ? '进行中' : '暂停' }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="cpi2Complete" label="单价" width="100"></el-table-column>
@@ -39,6 +46,7 @@ export default {
       currentPage: 1,
       pageSize: 10,
       totalProjects: 0,
+      isDomestic: true, // 新增数据属性，用于选择国内或海外
     };
   },
   created() {
@@ -46,28 +54,28 @@ export default {
   },
   methods: {
     async fetchProjects(page = 1) {
-      let loadingInstance = Loading.service({ fullscreen: true, text: '加载中...' }); // 开启加载状态
+      let loadingInstance = Loading.service({ fullscreen: true, text: '加载中...' });
       try {
         const token = localStorage.getItem('wenjvanjiToken');
+        const appId = this.isDomestic ? 148 : 381; // 根据isDomestic标志使用对应的appId
         const res = await app.callFunction({
           name: "getAuthUrl",
           data: {
-            url: `http://i.wenjuanji.com/api/v1/Projects?page=${page}&size=${this.pageSize}&appId=148&searchCateId=1&entryType=1`,
+            url: `http://i.wenjuanji.com/api/v1/Projects?page=${page}&size=${this.pageSize}&appId=${appId}&searchCateId=1&entryType=1`,
             authorization: `Bearer ${token}`,
           }
         });
         const result = JSON.parse(res.result);
-        console.log(result)
         if (result && result.data) {
           this.projectList = result.data.data;
           this.totalProjects = result.data.dataCount;
         } else {
-          throw new Error('Failed to fetch project data.');
+          throw new Error('获取项目数据失败。');
         }
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        console.error('获取项目数据时出错：', error);
       } finally {
-        loadingInstance.close(); // 关闭加载状态
+        loadingInstance.close();
       }
     },
     handleCurrentChange(val) {
@@ -76,7 +84,7 @@ export default {
     },
     handleSizeChange(val) {
       this.pageSize = val;
-      this.fetchProjects(1); // Reset to first page with new size
+      this.fetchProjects(1); // 重新设置为第一页，并使用新的大小
     }
   }
 };
