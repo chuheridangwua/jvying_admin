@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-23</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-24</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -167,13 +167,7 @@ export default {
     fetchProjects() {
       console.log('fetchProjects 开始执行');
 
-      // 初始化加载遮罩
-      let loadingInstance = this.$loading({
-        lock: true,
-        text: '正在获取问卷列表，请稍候...',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      });
+      this.isLoading = true
 
       setTimeout(() => { // 延时2秒后开始执行数据获取
         const newProjectDetails = [];
@@ -197,7 +191,7 @@ export default {
           app.callFunction({
             name: "getAuthUrl",
             data: {
-              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=20&actionId=0`,
+              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=50&actionId=0`,
               authorization: `Bearer ${token}`,
             }
           }).then(res => {
@@ -228,11 +222,10 @@ export default {
                 this.projectDetails = newProjectDetails;
                 this.projectPrices = newProjectPrices;
                 console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-                loadingInstance.close();
-                this.$notify.success({
-                  title: '成功',
-                  message: '项目列表已成功获取',
-                  duration: 2500
+                this.isLoading = false
+                this.$message({
+                  message: '问卷列表获取完成',
+                  type: 'success',
                 });
                 setTimeout(() => { // 延时2秒后开始执行数据获取
                   this.prepareDownloadStatusList();
@@ -240,23 +233,18 @@ export default {
               }
             } else {
               console.log('没有更多数据，结束数据获取');
-              loadingInstance.close(); // 关闭加载遮罩
-              this.$notify.success({
-                title: '成功',
-                message: '所有项目数据已成功获取',
-                duration: 2500
+              this.isLoading = false
+              this.$message({
+                message: '问卷列表获取完成',
+                type: 'success',
               });
               this.projectDetails = newProjectDetails;
               this.projectPrices = newProjectPrices;
             }
           }).catch(error => {
             console.error('fetchProjects 方法中捕获的错误:', error);
-            loadingInstance.close(); // 确保加载遮罩被关闭
-            this.$notify.error({
-              title: '错误',
-              message: '操作失败',
-              duration: 2500
-            });
+            this.isLoading = false
+            this.$message.error(`错误: ${error}`);
           });
         };
 
@@ -276,7 +264,7 @@ export default {
       }, 2000); // 设置延时
     },
     async downloadAllInactiveProjects() {
-      const BATCH_SIZE = 5; // 一次处理的项目数量
+      const BATCH_SIZE = 3; // 一次处理的项目数量
       let index = 0;
 
       const updateUI = async () => {
@@ -497,54 +485,55 @@ export default {
     },
 
     async updateSingleDayInfo() {
-      // let loadingInstance = Loading.service({ fullscreen: true, text: '正在更新数据...' });
       this.isLoading = true;
 
-      // 为每条数据添加price字段和settlementStatus字段
-      const updatedRows = this.rows.map(row => ({
-        ...row,
-        price: this.projectPrices[row.调查ID] || 'N/A', // 假设projectPrices是一个存储了项目ID对应价格的对象
-        settlementStatus: false // 默认所有问卷的结算状态为false
-      }));
+      setTimeout(async () => { // 延时1秒后开始执行数据获取和其他操作
+        // 为每条数据添加price字段和settlementStatus字段
+        const updatedRows = this.rows.map(row => ({
+          ...row,
+          price: this.projectPrices[row.调查ID] || 'N/A', // 假设projectPrices是一个存储了项目ID对应价格的对象
+          settlementStatus: false // 默认所有问卷的结算状态为false
+        }));
 
-      const date = this.search.selectedDate; // 当前选定的日期
-      const totalSurveys = updatedRows.length; // 当日完成问卷的总数
-      const statusCounts = updatedRows.reduce((acc, row) => {
-        acc[row.状态] = (acc[row.状态] || 0) + 1;
-        return acc;
-      }, {});
-      const participantCount = new Set(updatedRows.map(item => item.手机号码)).size; // 参与人数（不同手机号的个数）
+        const date = this.search.selectedDate; // 当前选定的日期
+        const totalSurveys = updatedRows.length; // 当日完成问卷的总数
+        const statusCounts = updatedRows.reduce((acc, row) => {
+          acc[row.状态] = (acc[row.状态] || 0) + 1;
+          return acc;
+        }, {});
+        const participantCount = new Set(updatedRows.map(item => item.手机号码)).size; // 参与人数（不同手机号的个数）
 
-      const updateData = {
-        date,
-        totalSurveys,
-        statusCounts,
-        participantCount,
-        rows: updatedRows // 包含price字段和settlementStatus字段的问卷数据列表
-      };
+        const updateData = {
+          date,
+          totalSurveys,
+          statusCounts,
+          participantCount,
+          rows: updatedRows // 包含price字段和settlementStatus字段的问卷数据列表
+        };
 
-      try {
-        const existingData = await db.collection("settlementData").where({ "data.date": date }).get();
-        if (existingData.data.length > 0) {
-          const recordId = existingData.data[0]._id;
-          await db.collection("settlementData").doc(recordId).update({
-            data: updateData
-          });
-          this.$message.success('当日信息已更新');
-        } else {
-          await db.collection("settlementData").add({
-            data: updateData
-          });
-          this.$message.success('当日信息已添加');
+        try {
+          const existingData = await db.collection("settlementData").where({ "data.date": date }).get();
+          if (existingData.data.length > 0) {
+            const recordId = existingData.data[0]._id;
+            await db.collection("settlementData").doc(recordId).update({
+              data: updateData
+            });
+            this.$message.success('当日信息已更新');
+          } else {
+            await db.collection("settlementData").add({
+              data: updateData
+            });
+            this.$message.success('当日信息已添加');
+          }
+        } catch (error) {
+          console.error('更新单日信息出错:', error);
+          this.$message.error('数据更新失败');
+        } finally {
+          this.isLoading = false;
         }
-      } catch (error) {
-        console.error('更新单日信息出错:', error);
-        this.$message.error('数据更新失败');
-      } finally {
-        // loadingInstance.close();
-        this.isLoading = false;
-      }
+      }, 1000); // 设置延时为1秒
     },
+
 
     getYesterdayDate() {
       const today = new Date();
