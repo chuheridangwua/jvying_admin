@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-9</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-10</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -215,15 +215,15 @@ export default {
               }
             }
 
-            if (!hasReachedBeforeSelectedDate) {
-              await fetchPageData(page + 1); // 递归调用以处理下一页
-            } else {
+            // if (!hasReachedBeforeSelectedDate) {
+            //   await fetchPageData(page + 1); // 递归调用以处理下一页
+            // } else {
               // 更新状态，结束递归
               this.projectDetails = newProjectDetails;
               this.projectPrices = newProjectPrices;
               console.log('所有数据已获取，更新后的 projectDetails:', this.projectDetails);
               this.isLoading = false;
-            }
+            // }
           } else {
             // 没有数据，更新状态，结束递归
             console.log('没有更多数据，结束数据获取');
