@@ -22,10 +22,10 @@
         style="width: calc(25% - 20px); margin: 10px;" value-format="yyyy-MM-dd" @change="fetchProjects">
       </el-date-picker>
       <!-- <el-button @click="filterProjectsByDateRange" type="primary" style="margin: 10px;">查找</el-button> -->
-      <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
+      <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-26</el-button>
+      <!-- <el-button type="success" style="margin: 10px;">loading-27</el-button> -->
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -117,7 +117,7 @@
 import app from '@/api/appwx';
 import db from '@/api/database';
 import MyLoadingIndicator from '../../components/MyLoadingIndicator.vue'
-import CustomDialog from '../../layout/components/CustomDialog.vue'
+import CustomDialog from '../../components/CustomDialog.vue'
 import * as XLSX from 'xlsx';
 import { Loading, Message } from 'element-ui';
 
@@ -176,25 +176,7 @@ export default {
     },
   },
   methods: {
-    // 用于执行异步操作的方法，显示加载指示器，等待异步操作完成后关闭加载指示器
-    async performAsyncOperation(operation) {
-      const loadingInstance = this.$loading({
-        lock: true,
-        text: '正在处理...',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      });
-
-      try {
-        await operation(); // 等待传入的异步操作完成
-      } catch (error) {
-        console.error("异步操作失败:", error);
-        this.$message.error('操作失败'); // 可根据实际需要展示错误信息
-      } finally {
-        loadingInstance.close(); // 确保加载指示器被关闭
-      }
-    },
-
+    // 获取项目列表
     fetchProjects() {
       console.log('fetchProjects 开始执行');
 
@@ -224,7 +206,7 @@ export default {
             }
           }).then(res => {
             const result = JSON.parse(res.result);
-
+            console.log(result);
             if (result && result.data && result.data.data.length > 0) {
               const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
               const hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
@@ -245,6 +227,8 @@ export default {
                 // 数据处理完成，更新数据并关闭加载遮罩
                 this.projectDetails = newProjectDetails;
                 this.projectPrices = newProjectPrices;
+                console.log('projectDetails', newProjectDetails);
+                console.log('projectPrices', newProjectPrices);
                 this.isLoading = false
                 this.$message({
                   message: '问卷列表获取完成',
@@ -274,7 +258,6 @@ export default {
         fetchPageData(page);
       }, 2000); // 设置延时
     },
-
     prepareDownloadStatusList() {
       this.downloadStatusList = this.projectDetails.map(project => ({
         projectId: project.projectId,
@@ -287,7 +270,7 @@ export default {
       }, 1000); // 设置延时
     },
     async downloadAllInactiveProjects() {
-      const BATCH_SIZE = 3; // 一次处理的项目数量
+      const BATCH_SIZE = 1; // 一次处理的项目数量
       let index = 0;
 
       const updateUI = async () => {
@@ -318,17 +301,14 @@ export default {
 
       updateUI(); // 开始批量处理
     },
-
     async downloadFile(projectId) {
       this.updateDownloadStatus(projectId, '正在下载', null, null, true);
-
       const token = localStorage.getItem('wenjvanjiToken');
       const appIds = [148, 381]; // 尝试的 appId 列表
       let success = false; // 标记是否成功下载文件
 
       for (const appId of appIds) {
         if (success) break; // 如果已经成功下载，则跳出循环
-
         try {
           const res = await app.callFunction({
             name: 'getAuthUrl',
@@ -405,7 +385,6 @@ export default {
         this.updateDownloadStatus(projectId, '下载失败', '所有appId尝试失败', null, false);
       }
     },
-
     // retryFailedDownloads 方法
     async retryFailedDownloads() {
       const failedProjects = this.downloadStatusList.filter(status => status.status === '下载失败');
@@ -427,19 +406,13 @@ export default {
         });
       }
     },
-
-
-
     // 更新下载状态的方法，现在支持 loading 参数
     updateDownloadStatus(projectId, status, error = null, appId = null, loading = false) {
-      this.downloadStatusList = this.downloadStatusList.map(item => {
-        if (item.projectId === projectId) {
-          return { ...item, status, error, appId, loading };
-        }
-        return item;
-      });
+      const index = this.downloadStatusList.findIndex(item => item.projectId === projectId);
+      if (index !== -1) {
+        this.$set(this.downloadStatusList, index, { ...this.downloadStatusList[index], status, error, appId, loading });
+      }
     },
-
     // 根据projectId查找价格的方法，确保projectId类型一致
     getProjectPriceByProjectId(projectId) {
       // 假设表格中的projectId是字符串类型，需要转换为数字进行比较
@@ -494,7 +467,7 @@ export default {
 
       // 重置搜索条件为初始状态
       this.search = {
-        selectedDate: this.getYesterdayDate(), // 重置为昨天的日期
+        selectedDate: '', // 重置为昨天的日期
         projectId: '',
         projectNumber: '',
         projectName: '',
@@ -502,11 +475,7 @@ export default {
         memberId: '',
         phoneNumber: '',
       };
-
-      // 重新获取数据
-      this.fetchProjects();
     },
-
     async updateSingleDayInfo() {
       this.isLoading = true;
 
@@ -556,8 +525,6 @@ export default {
         }
       }, 1500); // 设置延时为1秒
     },
-
-
     getYesterdayDate() {
       const today = new Date();
       const yesterday = new Date(today.setDate(today.getDate() - 1));
@@ -593,7 +560,6 @@ export default {
           return '';
       }
     },
-
     showDialog() {
       this.isDialogVisible = true;
     },
@@ -613,4 +579,4 @@ export default {
 .el-dialog {
   background-color: white;
 }
-</style>
+</style>../../components/CustomDialog.vue

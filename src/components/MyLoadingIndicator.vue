@@ -35,7 +35,6 @@ display: flex;
 justify-content: center;
 align-items: center;
 z-index: 9999;
-}
 
 .loader {
     position: relative;
@@ -64,11 +63,15 @@ z-index: 9999;
         animation: after 2s infinite;
     }
 }
+}
 
 @keyframes before {
-    0% {
+
+    0%,
+    100% {
         width: $thickness;
-        box-shadow: $lat (
+        box-shadow:
+            $lat (
             -$offset) nth($colors, 1),
             (-$lat) $offset nth($colors, 3
         );
@@ -76,31 +79,40 @@ z-index: 9999;
 
 35% {
     width: $size;
-    box-shadow: 0 (-$offset) nth($colors, 1), 0 $offset nth($colors, 3);
+    box-shadow:
+        0 (-$offset) nth($colors, 1),
+        0 $offset nth($colors, 3);
 }
 
-70%,
-100% {
+70% {
     width: $thickness;
-    box-shadow: (-$lat) (-$offset) nth($colors, 1), $lat $offset nth($colors, 3);
+    box-shadow:
+        (-$lat) (-$offset) nth($colors, 1),
+        $lat $offset nth($colors, 3);
 }
 }
 
 @keyframes after {
-    0% {
+
+    0%,
+    100% {
         height: $thickness;
-        box-shadow: $offset $lat nth($colors, 2), (-$offset) (-$lat) nth($colors, 4);
+        box-shadow:
+            $offset $lat nth($colors, 2),
+            (-$offset) (-$lat) nth($colors, 4);
     }
 
     35% {
         height: $size;
-        box-shadow: $offset 0 nth($colors, 2), (-$offset) 0 nth($colors, 4);
+        box-shadow:
+            $offset 0 nth($colors, 2),
+            (-$offset) 0 nth($colors, 4);
     }
 
-    70%,
-    100% {
+    70% {
         height: $thickness;
-        box-shadow: $offset (
+        box-shadow:
+            $offset (
             -$lat) nth($colors, 2),
             (-$offset) $lat nth($colors, 4
         );
