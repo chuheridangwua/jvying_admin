@@ -21,11 +21,11 @@
       <el-date-picker v-model="search.selectedDate" type="date" placeholder="选择日期"
         style="width: calc(25% - 20px); margin: 10px;" value-format="yyyy-MM-dd" @change="fetchProjects">
       </el-date-picker>
-      <el-button @click="filterProjectsByDateRange" type="primary" style="margin: 10px;">查找</el-button>
+      <!-- <el-button @click="filterProjectsByDateRange" type="primary" style="margin: 10px;">查找</el-button> -->
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <!-- <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-18</el-button> -->
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-19</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -166,8 +166,13 @@ export default {
 
     fetchProjects() {
       console.log('fetchProjects 开始执行');
-      this.isLoading = true;
-      console.log('isLoading 状态设置为 true');
+      // 显示加载中的通知
+      this.$notify({
+        title: '加载中',
+        message: '正在获取项目数据，请稍候...',
+        type: 'info',
+        duration: 0 // 0 表示不自动关闭
+      });
 
       const newProjectDetails = [];
       const newProjectPrices = {};
@@ -178,7 +183,8 @@ export default {
       console.log('selectedDate:', selectedDate);
       if (!selectedDate) {
         console.log('没有选择日期，函数提前返回');
-        this.isLoading = false;
+        // 关闭所有通知
+        this.$notify.closeAll();
         return;
       }
 
@@ -217,29 +223,45 @@ export default {
             if (!hasReachedBeforeSelectedDate) {
               fetchPageData(page + 1); // 递归调用以处理下一页
             } else {
-              // 数据处理完成，更新状态
+              // 数据处理完成，显示成功通知并关闭加载中的通知
+              this.$notify.success({
+                title: '成功',
+                message: '所有项目数据已成功获取',
+                duration: 3000
+              });
+              this.$notify.closeAll(); // 关闭所有通知，包括加载中的通知
               this.projectDetails = newProjectDetails;
               this.projectPrices = newProjectPrices;
               console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-              this.isLoading = false;
               this.prepareDownloadStatusList();
             }
           } else {
             console.log('没有更多数据，结束数据获取');
-            // 没有更多数据，更新状态
+            // 显示成功通知并关闭加载中的通知
+            this.$notify.success({
+              title: '成功',
+              message: '所有项目数据已成功获取',
+              duration: 3000
+            });
+            this.$notify.closeAll(); // 关闭所有通知
             this.projectDetails = newProjectDetails;
             this.projectPrices = newProjectPrices;
-            this.isLoading = false;
           }
         }).catch(error => {
           console.error('fetchProjects 方法中捕获的错误:', error);
-          this.isLoading = false;
-          this.$message.error('操作失败');
+          // 显示错误通知并关闭加载中的通知
+          this.$notify.error({
+            title: '错误',
+            message: '操作失败',
+            duration: 3000
+          });
+          this.$notify.closeAll();
         });
       };
 
       fetchPageData(page);
     },
+
 
 
     prepareDownloadStatusList() {
