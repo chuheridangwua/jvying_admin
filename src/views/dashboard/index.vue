@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">name: {{ name }}</div>
+    <h1>欢迎来到开言调查后台管理系统</h1>
   </div>
 </template>
 
