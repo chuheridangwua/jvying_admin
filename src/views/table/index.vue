@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-24</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-25</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -249,7 +249,7 @@ export default {
         };
 
         fetchPageData(page);
-      }, 2000); // 设置延时
+      }, 1000); // 设置延时
     },
 
     prepareDownloadStatusList() {
@@ -261,10 +261,10 @@ export default {
       this.isDownloadStatusDialogVisible = true;
       setTimeout(() => { // 延时2秒后开始执行数据获取
         this.downloadAllInactiveProjects(); // 在准备完下载状态列表之后开始下载流程
-      }, 2000); // 设置延时
+      }, 1000); // 设置延时
     },
     async downloadAllInactiveProjects() {
-      const BATCH_SIZE = 3; // 一次处理的项目数量
+      const BATCH_SIZE = 5; // 一次处理的项目数量
       let index = 0;
 
       const updateUI = async () => {
@@ -332,7 +332,7 @@ export default {
               const blob = this.base64ToBlob(fileData.base64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
               const reader = new FileReader();
 
-              reader.onload = (e) => {
+              reader.onload = async (e) => {
                 const workbook = XLSX.read(e.target.result, { type: 'binary' });
                 if (workbook.SheetNames.length > 0) {
                   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -344,6 +344,9 @@ export default {
                   jsonData = jsonData.filter(row => row['完成时间'].startsWith(this.search.selectedDate));
 
                   if (jsonData.length > 0) {
+                    // 等待一小段时间，以减轻系统压力
+                    await new Promise(resolve => setTimeout(resolve, 100));
+
                     // 确保将处理后的数据添加到rows数组中
                     this.rows = [...this.rows, ...jsonData];
                     console.log("File processed:", this.search.selectedDate, jsonData);
@@ -369,11 +372,13 @@ export default {
               // 如果没有base64数据，直接标记为下载失败
               this.updateDownloadStatus(projectId, '下载失败', '文件数据不存在', null, false);
             }
-
           }
         } catch (error) {
-          onsole.error(`下载失败: ${error.message}. 尝试 appId=${appId} for projectId=${projectId}`);
+          console.error(`下载失败: ${error.message}. 尝试 appId=${appId} for projectId=${projectId}`);
           this.updateDownloadStatus(projectId, '下载中途失败', error.message, appId, false);
+        } finally {
+          // 等待一小段时间，以减轻系统压力
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 
@@ -382,6 +387,7 @@ export default {
         this.updateDownloadStatus(projectId, '下载失败', '所有appId尝试失败', null, false);
       }
     },
+
 
     // retryFailedDownloads 方法
     async retryFailedDownloads() {
