@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-21</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-22</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -278,31 +278,10 @@ export default {
         appId: null,
       }));
       this.isDownloadStatusDialogVisible = true;
-      this.downloadAllInactiveProjects(); // 在准备完下载状态列表之后开始下载流程
+      setTimeout(() => { // 延时2秒后开始执行数据获取
+        this.downloadAllInactiveProjects(); // 在准备完下载状态列表之后开始下载流程
+      }, 2000); // 设置延时
     },
-    filterProjectsByDateRange() {
-      const [startDate, endDate] = this.search.completionDateRange;
-      const filteredProjects = this.projectDetails.filter(project => {
-        const projectDate = project.dateline.split(' ')[0];
-        return projectDate >= startDate && projectDate <= endDate;
-      });
-      // 然后根据filteredProjects中的projectId进行数据下载和渲染
-      this.downloadAllInactiveProjects(filteredProjects.map(p => p.projectId));
-    },
-    showDownloadDialog() {
-      // 初始化下载状态列表，为每个问卷添加“待下载”状态
-      this.downloadStatusList = this.projectDetails.map(project => ({
-        projectId: project.projectId,
-        status: '待下载',
-        name: project.name, // 假设问卷信息中包含名称
-      }));
-
-      this.isDownloadStatusDialogVisible = true; // 显示下载状态对话框
-
-      // 开始下载
-      this.downloadAllInactiveProjects();
-    },
-
     async downloadAllInactiveProjects() {
       const BATCH_SIZE = 5; // 一次处理的项目数量
       let index = 0;
