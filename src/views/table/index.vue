@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-19</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-20</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -166,101 +166,100 @@ export default {
 
     fetchProjects() {
       console.log('fetchProjects 开始执行');
-      // 显示加载中的通知
+      // 显示即将开始获取数据的通知
       this.$notify({
-        title: '加载中',
-        message: '正在获取项目数据，请稍候...',
+        title: '准备中',
+        message: '即将开始获取项目数据，请准备...',
         type: 'info',
-        duration: 0 // 0 表示不自动关闭
+        duration: 6000 // 2秒后自动关闭
       });
 
-      const newProjectDetails = [];
-      const newProjectPrices = {};
-      const token = localStorage.getItem('wenjvanjiToken');
-      console.log('localStorage 中读取的 token:', token);
+      setTimeout(() => { // 延时2秒后开始执行数据获取
+        const newProjectDetails = [];
+        const newProjectPrices = {};
+        const token = localStorage.getItem('wenjvanjiToken');
+        console.log('localStorage 中读取的 token:', token);
 
-      const selectedDate = this.search.selectedDate;
-      console.log('selectedDate:', selectedDate);
-      if (!selectedDate) {
-        console.log('没有选择日期，函数提前返回');
-        // 关闭所有通知
-        this.$notify.closeAll();
-        return;
-      }
+        const selectedDate = this.search.selectedDate;
+        console.log('selectedDate:', selectedDate);
+        if (!selectedDate) {
+          console.log('没有选择日期，函数提前返回');
+          return;
+        }
 
-      let page = 1;
-      let processedProjectIds = new Set();
+        let page = 1;
+        let processedProjectIds = new Set();
 
-      const fetchPageData = (page) => {
-        console.log(`开始处理页面 ${page}`);
-        app.callFunction({
-          name: "getAuthUrl",
-          data: {
-            url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=30&actionId=0`,
-            authorization: `Bearer ${token}`,
-          }
-        }).then(res => {
-          const result = JSON.parse(res.result);
-          console.log(`页面 ${page} 的结果:`, result);
-
-          if (result && result.data && result.data.data.length > 0) {
-            const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
-            const hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
-            console.log(`页面 ${page} - 最早日期 ${earliestDateInBatch} - 是否已经达到或超过选定日期:`, hasReachedBeforeSelectedDate);
-
-            for (const item of result.data.data) {
-              const itemDate = item.dateline.slice(0, 10);
-              console.log(`处理项目 - 日期: ${itemDate}, ID: ${item.relationId}`);
-
-              if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
-                processedProjectIds.add(item.relationId);
-                newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
-                newProjectPrices[item.relationId] = item.cash;
-                console.log(`添加项目 ID: ${item.relationId} - 价格: ${item.cash}`);
-              }
+        const fetchPageData = (page) => {
+          console.log(`开始处理页面 ${page}`);
+          app.callFunction({
+            name: "getAuthUrl",
+            data: {
+              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=20&actionId=0`,
+              authorization: `Bearer ${token}`,
             }
+          }).then(res => {
+            const result = JSON.parse(res.result);
+            console.log(`页面 ${page} 的结果:`, result);
 
-            if (!hasReachedBeforeSelectedDate) {
-              fetchPageData(page + 1); // 递归调用以处理下一页
+            if (result && result.data && result.data.data.length > 0) {
+              const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
+              const hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
+              console.log(`页面 ${page} - 最早日期 ${earliestDateInBatch} - 是否已经达到或超过选定日期:`, hasReachedBeforeSelectedDate);
+
+              for (const item of result.data.data) {
+                const itemDate = item.dateline.slice(0, 10);
+                console.log(`处理项目 - 日期: ${itemDate}, ID: ${item.relationId}`);
+
+                if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
+                  processedProjectIds.add(item.relationId);
+                  newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
+                  newProjectPrices[item.relationId] = item.cash;
+                  console.log(`添加项目 ID: ${item.relationId} - 价格: ${item.cash}`);
+                }
+              }
+
+              if (!hasReachedBeforeSelectedDate) {
+                fetchPageData(page + 1); // 递归调用以处理下一页
+              } else {
+                // 数据处理完成，显示成功通知
+                this.$notify.success({
+                  title: '成功',
+                  message: '所有项目数据已成功获取',
+                  duration: 3000
+                });
+                this.projectDetails = newProjectDetails;
+                this.projectPrices = newProjectPrices;
+                console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
+                // this.prepareDownloadStatusList();
+              }
             } else {
-              // 数据处理完成，显示成功通知并关闭加载中的通知
+              console.log('没有更多数据，结束数据获取');
+              // 显示成功通知
               this.$notify.success({
                 title: '成功',
                 message: '所有项目数据已成功获取',
                 duration: 3000
               });
-              this.$notify.closeAll(); // 关闭所有通知，包括加载中的通知
               this.projectDetails = newProjectDetails;
               this.projectPrices = newProjectPrices;
-              console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-              this.prepareDownloadStatusList();
             }
-          } else {
-            console.log('没有更多数据，结束数据获取');
-            // 显示成功通知并关闭加载中的通知
-            this.$notify.success({
-              title: '成功',
-              message: '所有项目数据已成功获取',
+          }).catch(error => {
+            this.$notify.closeAll();
+            console.error('fetchProjects 方法中捕获的错误:', error);
+            // 显示错误通知
+            this.$notify.error({
+              title: '错误',
+              message: '操作失败',
               duration: 3000
             });
-            this.$notify.closeAll(); // 关闭所有通知
-            this.projectDetails = newProjectDetails;
-            this.projectPrices = newProjectPrices;
-          }
-        }).catch(error => {
-          console.error('fetchProjects 方法中捕获的错误:', error);
-          // 显示错误通知并关闭加载中的通知
-          this.$notify.error({
-            title: '错误',
-            message: '操作失败',
-            duration: 3000
           });
-          this.$notify.closeAll();
-        });
-      };
+        };
 
-      fetchPageData(page);
+        fetchPageData(page);
+      }, 2000); // 设置延时
     },
+
 
 
 
