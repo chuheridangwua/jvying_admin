@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-4</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-5</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -202,7 +202,7 @@ export default {
           } else break; // 如果没有数据返回，则终止循环
         }
         console.log('this.projectDetails:', this.projectDetails);
-        this.prepareDownloadStatusList();
+        // this.prepareDownloadStatusList();
       } catch (error) {
         console.error('获取问卷信息时出错:', error);
         this.$message.error('操作失败');
