@@ -183,6 +183,12 @@ export default {
       this.isLoading = true
 
       setTimeout(() => { // 延时2秒后开始执行数据获取
+        // 清空之前的数据
+        this.rows = [];
+        this.projectDetails = [];
+        this.projectPrices = {};
+        this.downloadStatusList = [];
+        
         const newProjectDetails = [];
         const newProjectPrices = {};
         const token = localStorage.getItem('wenjvanjiToken');
