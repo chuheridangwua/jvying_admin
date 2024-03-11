@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-6</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-7</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -167,54 +167,54 @@ export default {
     async fetchProjects() {
       console.log('isLoading:', this.isLoading);
       this.isLoading = true;
-      try {
-        const newProjectDetails = [];
-        const newProjectPrices = {};
-        const token = localStorage.getItem('wenjvanjiToken');
-        const selectedDate = this.search.selectedDate;
-        if (!selectedDate) return;
+      // try {
+      //   const newProjectDetails = [];
+      //   const newProjectPrices = {};
+      //   const token = localStorage.getItem('wenjvanjiToken');
+      //   const selectedDate = this.search.selectedDate;
+      //   if (!selectedDate) return;
 
-        let page = 1;
-        let hasReachedBeforeSelectedDate = false;
-        let processedProjectIds = new Set();
+      //   let page = 1;
+      //   let hasReachedBeforeSelectedDate = false;
+      //   let processedProjectIds = new Set();
 
-        while (!hasReachedBeforeSelectedDate) {
-          const res = await app.callFunction({
-            name: "getAuthUrl",
-            data: {
-              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=10&actionId=0`,
-              authorization: `Bearer ${token}`,
-            }
-          });
-          const result = JSON.parse(res.result);
-          console.log('result', result);
-          if (result && result.data && result.data.data.length > 0) {
-            const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
-            hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
-            result.data.data.forEach(item => {
-              const itemDate = item.dateline.slice(0, 10);
-              if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
-                processedProjectIds.add(item.relationId);
-                newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
-                newProjectPrices[item.relationId] = item.cash;
-              }
-            });
-          } else {
-            break; // Stop the loop if no data returned
-          }
-          page++;
-        }
-        // Update state once after all data is collected
-        this.projectDetails = newProjectDetails;
-        this.projectPrices = newProjectPrices;
-        console.log('Updated projectDetails:', this.projectDetails);
-        // this.prepareDownloadStatusList();
-      } catch (error) {
-        console.error('Error fetching project information:', error);
-        this.$message.error('Operation failed');
-      } finally {
-        this.isLoading = false;
-      }
+      //   while (!hasReachedBeforeSelectedDate) {
+      //     const res = await app.callFunction({
+      //       name: "getAuthUrl",
+      //       data: {
+      //         url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=10&actionId=0`,
+      //         authorization: `Bearer ${token}`,
+      //       }
+      //     });
+      //     const result = JSON.parse(res.result);
+      //     console.log('result', result);
+      //     if (result && result.data && result.data.data.length > 0) {
+      //       const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
+      //       hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
+      //       result.data.data.forEach(item => {
+      //         const itemDate = item.dateline.slice(0, 10);
+      //         if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
+      //           processedProjectIds.add(item.relationId);
+      //           newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
+      //           newProjectPrices[item.relationId] = item.cash;
+      //         }
+      //       });
+      //     } else {
+      //       break; // Stop the loop if no data returned
+      //     }
+      //     page++;
+      //   }
+      //   // Update state once after all data is collected
+      //   this.projectDetails = newProjectDetails;
+      //   this.projectPrices = newProjectPrices;
+      //   console.log('Updated projectDetails:', this.projectDetails);
+      //   // this.prepareDownloadStatusList();
+      // } catch (error) {
+      //   console.error('Error fetching project information:', error);
+      //   this.$message.error('Operation failed');
+      // } finally {
+      //   this.isLoading = false;
+      // }
     },
 
 
