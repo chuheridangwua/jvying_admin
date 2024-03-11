@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-5</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-6</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -166,50 +166,57 @@ export default {
 
     async fetchProjects() {
       console.log('isLoading:', this.isLoading);
-      this.isLoading = true; // 显示加载指示器
+      this.isLoading = true;
       try {
-        this.rows = [];
-        this.projectDetails = [];
-        this.projectPrices = {};
-        this.downloadStatusList = [];
-        if (!this.search.selectedDate) return; // 如果没有选择日期，则不执行任何操作
-        let page = 1;
+        const newProjectDetails = [];
+        const newProjectPrices = {};
         const token = localStorage.getItem('wenjvanjiToken');
         const selectedDate = this.search.selectedDate;
+        if (!selectedDate) return;
+
+        let page = 1;
         let hasReachedBeforeSelectedDate = false;
         let processedProjectIds = new Set();
+
         while (!hasReachedBeforeSelectedDate) {
           const res = await app.callFunction({
             name: "getAuthUrl",
             data: {
-              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=1000&actionId=0`,
+              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=10&actionId=0`,
               authorization: `Bearer ${token}`,
             }
           });
           const result = JSON.parse(res.result);
+          console.log('result', result);
           if (result && result.data && result.data.data.length > 0) {
             const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
-            if (earliestDateInBatch < selectedDate) hasReachedBeforeSelectedDate = true;
+            hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
             result.data.data.forEach(item => {
               const itemDate = item.dateline.slice(0, 10);
               if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
                 processedProjectIds.add(item.relationId);
-                this.projectDetails.push({ projectId: item.relationId, dateline: itemDate });
-                this.projectPrices[item.relationId] = item.cash;
+                newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
+                newProjectPrices[item.relationId] = item.cash;
               }
             });
-            page++;
-          } else break; // 如果没有数据返回，则终止循环
+          } else {
+            break; // Stop the loop if no data returned
+          }
+          page++;
         }
-        console.log('this.projectDetails:', this.projectDetails);
+        // Update state once after all data is collected
+        this.projectDetails = newProjectDetails;
+        this.projectPrices = newProjectPrices;
+        console.log('Updated projectDetails:', this.projectDetails);
         // this.prepareDownloadStatusList();
       } catch (error) {
-        console.error('获取问卷信息时出错:', error);
-        this.$message.error('操作失败');
+        console.error('Error fetching project information:', error);
+        this.$message.error('Operation failed');
       } finally {
-        this.isLoading = false; // 关闭加载指示器
+        this.isLoading = false;
       }
     },
+
 
 
     prepareDownloadStatusList() {
