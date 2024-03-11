@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-25</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-26</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -53,8 +53,36 @@
         :sortable="true"></el-table-column>
     </el-table>
 
+    <custom-dialog :visible="isDownloadStatusDialogVisible" title="下载状态" @close="handleDownloadStatusDialogClose">
+      <el-table :data="downloadStatusList" style="width: 80vh;" max-height="400" align="center">
+        <el-table-column prop="projectId" label="项目ID" width="120"></el-table-column>
+        <el-table-column prop="status" label="状态" width="100">
+
+          <template v-slot="scope">
+            <el-tag :type="scope.row.status === '下载成功' ? 'success' : 'danger'">
+              {{ scope.row.status }}<i class="el-icon-loading" v-if="scope.row.loading"></i>
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="AppID状态" width="100">
+
+          <template v-slot="scope">
+            <el-tag v-if="scope.row.appId" :type="getAppIdType(scope.row.appId)">
+              {{ scope.row.status === '下载成功' ? getAppIdLabel(scope.row.appId) : '' }}
+            </el-tag>
+            <el-tag v-else>
+              未知
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="error" label="错误信息"></el-table-column>
+      </el-table>
+      <el-button style="margin-top: 10px;" v-if="downloadStatusList.some(status => status.status === '下载失败')"
+        @click="retryFailedDownloads" type="danger">重新下载失败的数据</el-button>
+    </custom-dialog>
+
     <!-- 下载状态对话框 -->
-    <el-dialog :visible.sync="isDownloadStatusDialogVisible" width="40%" :before-close="handleDownloadStatusDialogClose"
+    <!-- <el-dialog :visible.sync="isDownloadStatusDialogVisible" width="40%" :before-close="handleDownloadStatusDialogClose"
       title="下载状态">
       <el-table :data="downloadStatusList" style="width: 100%" align="center">
         <el-table-column prop="projectId" label="项目ID" width="120"></el-table-column>
@@ -81,7 +109,7 @@
       </el-table>
       <el-button style="margin-top: 20px;" v-if="downloadStatusList.some(status => status.status === '下载失败')"
         @click="retryFailedDownloads" type="danger">重新下载失败的数据</el-button>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -89,15 +117,18 @@
 import app from '@/api/appwx';
 import db from '@/api/database';
 import MyLoadingIndicator from '../../components/MyLoadingIndicator.vue'
+import CustomDialog from '../../layout/components/CustomDialog.vue'
 import * as XLSX from 'xlsx';
 import { Loading, Message } from 'element-ui';
 
 export default {
   components: {
     MyLoadingIndicator,
+    CustomDialog
   },
   data() {
     return {
+      isDialogVisible: false,
       isLoading: false,
       rows: [],
       projectDetails: [],
@@ -173,10 +204,8 @@ export default {
         const newProjectDetails = [];
         const newProjectPrices = {};
         const token = localStorage.getItem('wenjvanjiToken');
-        console.log('localStorage 中读取的 token:', token);
 
         const selectedDate = this.search.selectedDate;
-        console.log('selectedDate:', selectedDate);
         if (!selectedDate) {
           console.log('没有选择日期，函数提前返回');
           loadingInstance.close(); // 关闭加载遮罩
@@ -187,7 +216,6 @@ export default {
         let processedProjectIds = new Set();
 
         const fetchPageData = (page) => {
-          console.log(`开始处理页面 ${page}`);
           app.callFunction({
             name: "getAuthUrl",
             data: {
@@ -196,22 +224,18 @@ export default {
             }
           }).then(res => {
             const result = JSON.parse(res.result);
-            console.log(`页面 ${page} 的结果:`, result);
 
             if (result && result.data && result.data.data.length > 0) {
               const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
               const hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
-              console.log(`页面 ${page} - 最早日期 ${earliestDateInBatch} - 是否已经达到或超过选定日期:`, hasReachedBeforeSelectedDate);
 
               for (const item of result.data.data) {
                 const itemDate = item.dateline.slice(0, 10);
-                console.log(`处理项目 - 日期: ${itemDate}, ID: ${item.relationId}`);
 
                 if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
                   processedProjectIds.add(item.relationId);
                   newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
                   newProjectPrices[item.relationId] = item.cash;
-                  console.log(`添加项目 ID: ${item.relationId} - 价格: ${item.cash}`);
                 }
               }
 
@@ -221,7 +245,6 @@ export default {
                 // 数据处理完成，更新数据并关闭加载遮罩
                 this.projectDetails = newProjectDetails;
                 this.projectPrices = newProjectPrices;
-                console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
                 this.isLoading = false
                 this.$message({
                   message: '问卷列表获取完成',
@@ -229,7 +252,7 @@ export default {
                 });
                 setTimeout(() => { // 延时2秒后开始执行数据获取
                   this.prepareDownloadStatusList();
-                }, 1000); // 设置延时
+                }, 1500); // 设置延时
               }
             } else {
               console.log('没有更多数据，结束数据获取');
@@ -249,7 +272,7 @@ export default {
         };
 
         fetchPageData(page);
-      }, 1000); // 设置延时
+      }, 2000); // 设置延时
     },
 
     prepareDownloadStatusList() {
@@ -264,7 +287,7 @@ export default {
       }, 1000); // 设置延时
     },
     async downloadAllInactiveProjects() {
-      const BATCH_SIZE = 5; // 一次处理的项目数量
+      const BATCH_SIZE = 3; // 一次处理的项目数量
       let index = 0;
 
       const updateUI = async () => {
@@ -314,7 +337,6 @@ export default {
               authorization: `Bearer ${token}`
             }
           });
-          console.log('res:', res);
           const data = JSON.parse(res.result);
 
           if (data.data) {
@@ -332,7 +354,7 @@ export default {
               const blob = this.base64ToBlob(fileData.base64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
               const reader = new FileReader();
 
-              reader.onload = async (e) => {
+              reader.onload = (e) => {
                 const workbook = XLSX.read(e.target.result, { type: 'binary' });
                 if (workbook.SheetNames.length > 0) {
                   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -344,9 +366,6 @@ export default {
                   jsonData = jsonData.filter(row => row['完成时间'].startsWith(this.search.selectedDate));
 
                   if (jsonData.length > 0) {
-                    // 等待一小段时间，以减轻系统压力
-                    await new Promise(resolve => setTimeout(resolve, 100));
-
                     // 确保将处理后的数据添加到rows数组中
                     this.rows = [...this.rows, ...jsonData];
                     console.log("File processed:", this.search.selectedDate, jsonData);
@@ -372,13 +391,12 @@ export default {
               // 如果没有base64数据，直接标记为下载失败
               this.updateDownloadStatus(projectId, '下载失败', '文件数据不存在', null, false);
             }
+
           }
         } catch (error) {
-          console.error(`下载失败: ${error.message}. 尝试 appId=${appId} for projectId=${projectId}`);
-          this.updateDownloadStatus(projectId, '下载中途失败', error.message, appId, false);
-        } finally {
-          // 等待一小段时间，以减轻系统压力
-          await new Promise(resolve => setTimeout(resolve, 100));
+          success = true; // 标记下载成功
+          console.error(`Error trying with appId=${appId} for projectId=${projectId}:`, error);
+          this.updateDownloadStatus(projectId, '下载失败', error.toString(), appId, false);
         }
       }
 
@@ -387,7 +405,6 @@ export default {
         this.updateDownloadStatus(projectId, '下载失败', '所有appId尝试失败', null, false);
       }
     },
-
 
     // retryFailedDownloads 方法
     async retryFailedDownloads() {
@@ -537,7 +554,7 @@ export default {
         } finally {
           this.isLoading = false;
         }
-      }, 1000); // 设置延时为1秒
+      }, 1500); // 设置延时为1秒
     },
 
 
@@ -576,6 +593,13 @@ export default {
           return '';
       }
     },
+
+    showDialog() {
+      this.isDialogVisible = true;
+    },
+    closeDialog() {
+      this.isDialogVisible = false;
+    }
   }
 };
 </script>
