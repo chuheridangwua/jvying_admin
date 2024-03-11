@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-14</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-15</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -164,7 +164,7 @@ export default {
       }
     },
 
-    async fetchProjects() {
+    fetchProjects() {
       console.log('fetchProjects 开始执行');
       this.isLoading = true;
       console.log('isLoading 状态设置为 true');
@@ -185,18 +185,17 @@ export default {
       let page = 1;
       let processedProjectIds = new Set();
 
-      const fetchPageData = async (page) => {
+      const fetchPageData = (page) => {
         console.log(`开始处理页面 ${page}`);
-        try {
-          const res = await app.callFunction({
-            name: "getAuthUrl",
-            data: {
-              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=30&actionId=0`,
-              authorization: `Bearer ${token}`,
-            }
-          });
-          console.log(`页面 ${page} 的结果:`, res.result);
+        app.callFunction({
+          name: "getAuthUrl",
+          data: {
+            url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=30&actionId=0`,
+            authorization: `Bearer ${token}`,
+          }
+        }).then(res => {
           const result = JSON.parse(res.result);
+          console.log(`页面 ${page} 的结果:`, result);
 
           // if (result && result.data && result.data.data.length > 0) {
           //   const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
@@ -216,27 +215,30 @@ export default {
           //   }
 
           //   if (!hasReachedBeforeSelectedDate) {
-          //     await fetchPageData(page + 1); // 递归调用以处理下一页
+          //     fetchPageData(page + 1); // 使用递归调用以处理下一页
+          //   } else {
+          //     // 数据处理完成，更新状态
+          //     this.projectDetails = newProjectDetails;
+          //     this.projectPrices = newProjectPrices;
+          //     console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
+          //     this.isLoading = false;
           //   }
           // } else {
           //   console.log('没有更多数据，结束数据获取');
+          //   // 没有更多数据，更新状态
+          //   this.projectDetails = newProjectDetails;
+          //   this.projectPrices = newProjectPrices;
+          //   this.isLoading = false;
           // }
-        } catch (error) {
+        }).catch(error => {
           console.error('fetchProjects 方法中捕获的错误:', error);
+          this.isLoading = false;
           this.$message.error('操作失败');
-        } finally {
-          this.isLoading = false; // 确保无论成功还是失败，加载状态都会被更新
-          // 在此处更新项目详情和价格
-          this.projectDetails = newProjectDetails;
-          this.projectPrices = newProjectPrices;
-          console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-        }
+        });
       };
 
-      await fetchPageData(page);
+      fetchPageData(page);
     },
-
-
 
     prepareDownloadStatusList() {
       this.downloadStatusList = this.projectDetails.map(project => ({
