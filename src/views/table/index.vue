@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-12</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-13</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -88,9 +88,9 @@
 <script>
 import app from '@/api/appwx';
 import db from '@/api/database';
+import MyLoadingIndicator from '../../components/MyLoadingIndicator.vue'
 import * as XLSX from 'xlsx';
 import { Loading, Message } from 'element-ui';
-import MyLoadingIndicator from '../../components/MyLoadingIndicator.vue'
 
 export default {
   components: {
@@ -189,15 +189,24 @@ export default {
       const fetchPageData = async (page) => {
         console.log(`开始处理页面 ${page}`);
         try {
-          const res = await app.callFunction({
+          app.callFunction({
             name: "getAuthUrl",
             data: {
               url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=30&actionId=0`,
               authorization: `Bearer ${token}`,
             }
           });
-          const result = JSON.parse(res.result);
-          console.log(`页面 ${page} 的结果:`, result);
+          console.log('processedProjectIds:12313', processedProjectIds);
+          // const res = await app.callFunction({
+          //   name: "getAuthUrl",
+          //   data: {
+          //     url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=30&actionId=0`,
+          //     authorization: `Bearer ${token}`,
+          //   }
+          // });
+          // console.log(`页面 ${page} 的结果:`, res.result);
+          // const result = JSON.parse(res.result);
+          // console.log(`页面 ${page} 的结果:`, result);
 
           // if (result && result.data && result.data.data.length > 0) {
           //   const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
@@ -216,15 +225,15 @@ export default {
           //     }
           //   }
 
-          //   // if (!hasReachedBeforeSelectedDate) {
-          //   //   await fetchPageData(page + 1); // 递归调用以处理下一页
-          //   // } else {
-          //   //   // 更新状态，结束递归
-          //   //   this.projectDetails = newProjectDetails;
-          //   //   this.projectPrices = newProjectPrices;
-          //   //   console.log('所有数据已获取，更新后的 projectDetails:', this.projectDetails);
-          //   //   this.isLoading = false;
-          //   // }
+          //   if (!hasReachedBeforeSelectedDate) {
+          //     await fetchPageData(page + 1); // 递归调用以处理下一页
+          //   } else {
+          //     // 更新状态，结束递归
+          //     this.projectDetails = newProjectDetails;
+          //     this.projectPrices = newProjectPrices;
+          //     console.log('所有数据已获取，更新后的 projectDetails:', this.projectDetails);
+          //     this.isLoading = false;
+          //   }
           // } else {
           //   // 没有数据，更新状态，结束递归
           //   console.log('没有更多数据，结束数据获取');
@@ -237,7 +246,7 @@ export default {
           this.isLoading = false;
           this.$message.error('操作失败');
         } finally {
-          this.isLoading = false;
+          // this.isLoading = false;
         }
       };
 
@@ -329,6 +338,7 @@ export default {
               authorization: `Bearer ${token}`
             }
           });
+          console.log('res:', res);
           const data = JSON.parse(res.result);
 
           if (data.data) {
