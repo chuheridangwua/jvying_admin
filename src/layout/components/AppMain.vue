@@ -1,7 +1,7 @@
 <template>
   <section class="app-main">
-    <transition name="fade-transform" mode="out">
-    <!-- <transition name="fade-transform" mode="out-in"> -->
+    <!-- <transition name="fade-transform" mode="out"> -->
+    <transition name="fade-transform" mode="in-out">
       <!-- 此处修改了router侧边缩回 -->
       <router-view :key="key" />
     </transition>
