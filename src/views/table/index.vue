@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-22</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-23</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -55,7 +55,7 @@
 
     <!-- 下载状态对话框 -->
     <el-dialog :visible.sync="isDownloadStatusDialogVisible" width="40%" :before-close="handleDownloadStatusDialogClose"
-      style="background-color: white" title="下载状态">
+      title="下载状态">
       <el-table :data="downloadStatusList" style="width: 100%" align="center">
         <el-table-column prop="projectId" label="项目ID" width="120"></el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -166,12 +166,13 @@ export default {
 
     fetchProjects() {
       console.log('fetchProjects 开始执行');
-      // 显示即将开始获取数据的通知
-      this.$notify({
-        title: '准备中',
-        message: '即将开始获取问卷列表，请准备...',
-        type: 'info',
-        duration: 6000 // 2秒后自动关闭
+
+      // 初始化加载遮罩
+      let loadingInstance = this.$loading({
+        lock: true,
+        text: '正在获取问卷列表，请稍候...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
       });
 
       setTimeout(() => { // 延时2秒后开始执行数据获取
@@ -184,6 +185,7 @@ export default {
         console.log('selectedDate:', selectedDate);
         if (!selectedDate) {
           console.log('没有选择日期，函数提前返回');
+          loadingInstance.close(); // 关闭加载遮罩
           return;
         }
 
@@ -222,44 +224,38 @@ export default {
               if (!hasReachedBeforeSelectedDate) {
                 fetchPageData(page + 1); // 递归调用以处理下一页
               } else {
-                // 数据处理完成，显示成功通知
-                // this.$notify.success({
-                //   title: '成功',
-                //   message: '所有项目数据已成功获取',
-                //   duration: 3000
-                // });
+                // 数据处理完成，更新数据并关闭加载遮罩
                 this.projectDetails = newProjectDetails;
                 this.projectPrices = newProjectPrices;
                 console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-                this.$notify({
-                  title: '准备中',
-                  message: '即将开始获取问卷数据，请准备...',
-                  type: 'info',
-                  duration: 6000 // 2秒后自动关闭
+                loadingInstance.close();
+                this.$notify.success({
+                  title: '成功',
+                  message: '项目列表已成功获取',
+                  duration: 2500
                 });
                 setTimeout(() => { // 延时2秒后开始执行数据获取
                   this.prepareDownloadStatusList();
-                }, 2000); // 设置延时
+                }, 1000); // 设置延时
               }
             } else {
               console.log('没有更多数据，结束数据获取');
-              // 显示成功通知
+              loadingInstance.close(); // 关闭加载遮罩
               this.$notify.success({
                 title: '成功',
                 message: '所有项目数据已成功获取',
-                duration: 3000
+                duration: 2500
               });
               this.projectDetails = newProjectDetails;
               this.projectPrices = newProjectPrices;
             }
           }).catch(error => {
-            this.$notify.closeAll();
             console.error('fetchProjects 方法中捕获的错误:', error);
-            // 显示错误通知
+            loadingInstance.close(); // 确保加载遮罩被关闭
             this.$notify.error({
               title: '错误',
               message: '操作失败',
-              duration: 3000
+              duration: 2500
             });
           });
         };
@@ -267,9 +263,6 @@ export default {
         fetchPageData(page);
       }, 2000); // 设置延时
     },
-
-
-
 
     prepareDownloadStatusList() {
       this.downloadStatusList = this.projectDetails.map(project => ({
@@ -298,8 +291,9 @@ export default {
 
         const nextIndex = Math.min(index + BATCH_SIZE, this.downloadStatusList.length);
         const currentBatch = this.downloadStatusList.slice(index, nextIndex);
-
         const promises = currentBatch.map(project => this.downloadFile(project.projectId));
+        console.log("promises", promises)
+
         await Promise.all(promises);
 
         // 一批处理完成后，异步更新UI
@@ -390,9 +384,8 @@ export default {
 
           }
         } catch (error) {
-          success = true; // 标记下载成功
-          console.error(`Error trying with appId=${appId} for projectId=${projectId}:`, error);
-          this.updateDownloadStatus(projectId, '下载失败', error.toString(), appId, false);
+          onsole.error(`下载失败: ${error.message}. 尝试 appId=${appId} for projectId=${projectId}`);
+          this.updateDownloadStatus(projectId, '下载中途失败', error.message, appId, false);
         }
       }
 
@@ -596,5 +589,9 @@ export default {
 .download-status-item {
   margin-bottom: 4px;
   /* 增加列表项之间的间距 */
+}
+
+.el-dialog {
+  background-color: white;
 }
 </style>
