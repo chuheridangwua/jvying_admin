@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-3</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-4</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -98,7 +98,7 @@ export default {
   },
   data() {
     return {
-      isLoading:false,
+      isLoading: false,
       rows: [],
       projectDetails: [],
       projectPrices: {}, // 存储每个项目的价格
@@ -244,27 +244,38 @@ export default {
       this.downloadAllInactiveProjects();
     },
 
-    // downloadAllInactiveProjects 方法
     async downloadAllInactiveProjects() {
-      let downloadPromises = this.downloadStatusList.map(project => this.downloadFile(project.projectId));
+      const BATCH_SIZE = 3; // 一次处理的项目数量
+      let index = 0;
 
-      try {
-        let results = await Promise.all(downloadPromises);
-        // 所有文件下载并解析完成后，一次性更新rows
-        results.forEach(data => {
-          if (data) {
-            this.rows = [...this.rows, ...data];
-          }
+      const updateUI = async () => {
+        if (index >= this.downloadStatusList.length) {
+          this.allDownloadsCompleted = true;
+          this.isLoading = false; // 关闭加载指示器
+          this.$message({
+            message: '所有文件下载完成',
+            type: 'success',
+          });
+          return;
+        }
+
+        const nextIndex = Math.min(index + BATCH_SIZE, this.downloadStatusList.length);
+        const currentBatch = this.downloadStatusList.slice(index, nextIndex);
+
+        const promises = currentBatch.map(project => this.downloadFile(project.projectId));
+        await Promise.all(promises);
+
+        // 一批处理完成后，异步更新UI
+        this.$nextTick(() => {
+          console.log('Batch completed, UI updated');
         });
-        this.allDownloadsCompleted = true;
-        this.$message({
-          message: '所有文件下载完成',
-          type: 'success',
-        });
-      } catch (error) {
-        console.error('下载或处理文件时出现错误:', error);
-        this.$message.error('下载或处理文件时出现错误');
-      }
+
+        index += BATCH_SIZE;
+        setTimeout(updateUI, 0); // 使用setTimeout来异步调用updateUI，避免阻塞UI线程
+      };
+
+      this.isLoading = true; // 显示加载指示器
+      updateUI(); // 开始批量处理
     },
 
     async downloadFile(projectId) {
