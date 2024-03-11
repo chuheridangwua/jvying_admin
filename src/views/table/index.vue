@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="loading" type="warning" style="margin: 10px;">loading-1</el-button>
+      <el-button @click="loading" type="warning" style="margin: 10px;">loading-2</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -98,6 +98,7 @@ export default {
   },
   data() {
     return {
+      isLoading: false,
       rows: [],
       projectDetails: [],
       projectPrices: {}, // 存储每个项目的价格
@@ -144,86 +145,83 @@ export default {
     },
   },
   methods: {
-    loading() {
+    // 用于执行异步操作的方法，显示加载指示器，等待异步操作完成后关闭加载指示器
+    async performAsyncOperation(operation) {
       const loadingInstance = this.$loading({
         lock: true,
-        text: '正在获取问卷信息...',
+        text: '正在处理...',
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       });
 
-      setTimeout(() => {
-        loadingInstance.close(); // 3秒后关闭加载指示器
-        console.log("加载完成");
-      }, 3000); // 设置延时为3000毫秒（即3秒）
+      try {
+        await operation(); // 等待传入的异步操作完成
+      } catch (error) {
+        console.error("异步操作失败:", error);
+        this.$message.error('操作失败'); // 可根据实际需要展示错误信息
+      } finally {
+        loadingInstance.close(); // 确保加载指示器被关闭
+      }
     },
 
     async fetchProjects() {
-      // 清空之前的数据
-      this.rows = [];
-      this.projectDetails = [];
-      this.projectPrices = {};
-      this.downloadStatusList = [];
+      this.performAsyncOperation(async () => {
+        // 清空之前的数据
+        this.rows = [];
+        this.projectDetails = [];
+        this.projectPrices = {};
+        this.downloadStatusList = [];
 
-      if (!this.search.selectedDate) return; // 如果没有选择日期，则不执行操作
+        if (!this.search.selectedDate) return; // 如果没有选择日期，则不执行操作
 
-      this.fetchingInfo = true;
+        let page = 1;
+        const token = localStorage.getItem('wenjvanjiToken');
+        const selectedDate = this.search.selectedDate;
+        let hasReachedBeforeSelectedDate = false;
+        let processedProjectIds = new Set();
 
-      // let loadingInstance = this.$loading({ fullscreen: true, text: '正在获取问卷信息...' });
-      this.isLoading = true;
-
-      let page = 1;
-      const token = localStorage.getItem('wenjvanjiToken');
-      const selectedDate = this.search.selectedDate; // 使用选定的日期进行数据获取
-      let hasReachedBeforeSelectedDate = false;
-      let processedProjectIds = new Set(); // 使用Set来跟踪已处理的projectId
-
-      try {
-        while (!hasReachedBeforeSelectedDate) {
-          const res = await app.callFunction({
-            name: "getAuthUrl",
-            data: {
-              url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=1000&actionId=0`,
-              authorization: `Bearer ${token}`,
-            }
-          });
-          const result = JSON.parse(res.result);
-          console.log("result:", result);
-          if (result && result.data && result.data.data.length > 0) {
-            const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
-            console.log("当前批次最早日期:", earliestDateInBatch);
-
-            if (earliestDateInBatch < selectedDate) {
-              hasReachedBeforeSelectedDate = true;
-            }
-
-            result.data.data.forEach(item => {
-              const itemDate = item.dateline.slice(0, 10); // 提取日期部分
-              if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
-                processedProjectIds.add(item.relationId); // 标记projectId为已处理
-                this.projectDetails.push({
-                  projectId: item.relationId,
-                  dateline: itemDate // 仅保存日期部分
-                });
-                // 保存价格信息
-                this.projectPrices[item.relationId] = item.cash;
+        try {
+          while (!hasReachedBeforeSelectedDate) {
+            const res = await app.callFunction({
+              name: "getAuthUrl",
+              data: {
+                url: `http://i.wenjuanji.com/api/v1/CashLogs?page=${page}&size=1000&actionId=0`,
+                authorization: `Bearer ${token}`,
               }
             });
-            page++;
-          } else {
-            break; // 如果没有数据返回，则终止循环
+            const result = JSON.parse(res.result);
+            if (result && result.data && result.data.data.length > 0) {
+              const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
+
+              if (earliestDateInBatch < selectedDate) {
+                hasReachedBeforeSelectedDate = true;
+              }
+
+              result.data.data.forEach(item => {
+                const itemDate = item.dateline.slice(0, 10);
+                if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
+                  processedProjectIds.add(item.relationId);
+                  this.projectDetails.push({
+                    projectId: item.relationId,
+                    dateline: itemDate
+                  });
+                  this.projectPrices[item.relationId] = item.cash;
+                }
+              });
+              page++;
+            } else {
+              break; // 如果没有数据返回，则终止循环
+            }
           }
+          this.prepareDownloadStatusList();
+        } catch (error) {
+          console.error('获取问卷信息时出错:', error);
+        } finally {
+          this.fetchingInfo = false;
         }
-        console.log("Filtered projectDetails", this.projectDetails);
-        this.prepareDownloadStatusList();
-      } catch (error) {
-        console.error('获取问卷信息时出错:', error);
-      } finally {
-        this.isLoading = false;
-        // loadingInstance.close();
-        this.fetchingInfo = false;
-      }
+      });
     },
+
 
 
     prepareDownloadStatusList() {
@@ -389,8 +387,6 @@ export default {
         });
       }
     },
-
-
 
     // 更新下载状态的方法，现在支持 loading 参数
     updateDownloadStatus(projectId, status, error = null, appId = null, loading = false) {
