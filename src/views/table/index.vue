@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-15</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-16</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -197,39 +197,39 @@ export default {
           const result = JSON.parse(res.result);
           console.log(`页面 ${page} 的结果:`, result);
 
-          // if (result && result.data && result.data.data.length > 0) {
-          //   const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
-          //   const hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
-          //   console.log(`页面 ${page} - 最早日期 ${earliestDateInBatch} - 是否已经达到或超过选定日期:`, hasReachedBeforeSelectedDate);
+          if (result && result.data && result.data.data.length > 0) {
+            const earliestDateInBatch = result.data.data[result.data.data.length - 1].dateline.slice(0, 10);
+            const hasReachedBeforeSelectedDate = earliestDateInBatch < selectedDate;
+            console.log(`页面 ${page} - 最早日期 ${earliestDateInBatch} - 是否已经达到或超过选定日期:`, hasReachedBeforeSelectedDate);
 
-          //   for (const item of result.data.data) {
-          //     const itemDate = item.dateline.slice(0, 10);
-          //     console.log(`处理项目 - 日期: ${itemDate}, ID: ${item.relationId}`);
+            for (const item of result.data.data) {
+              const itemDate = item.dateline.slice(0, 10);
+              console.log(`处理项目 - 日期: ${itemDate}, ID: ${item.relationId}`);
 
-          //     if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
-          //       processedProjectIds.add(item.relationId);
-          //       newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
-          //       newProjectPrices[item.relationId] = item.cash;
-          //       console.log(`添加项目 ID: ${item.relationId} - 价格: ${item.cash}`);
-          //     }
-          //   }
+              if (itemDate === selectedDate && !processedProjectIds.has(item.relationId)) {
+                processedProjectIds.add(item.relationId);
+                newProjectDetails.push({ projectId: item.relationId, dateline: itemDate });
+                newProjectPrices[item.relationId] = item.cash;
+                console.log(`添加项目 ID: ${item.relationId} - 价格: ${item.cash}`);
+              }
+            }
 
-          //   if (!hasReachedBeforeSelectedDate) {
-          //     fetchPageData(page + 1); // 使用递归调用以处理下一页
-          //   } else {
-          //     // 数据处理完成，更新状态
-          //     this.projectDetails = newProjectDetails;
-          //     this.projectPrices = newProjectPrices;
-          //     console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-          //     this.isLoading = false;
-          //   }
-          // } else {
-          //   console.log('没有更多数据，结束数据获取');
-          //   // 没有更多数据，更新状态
-          //   this.projectDetails = newProjectDetails;
-          //   this.projectPrices = newProjectPrices;
-          //   this.isLoading = false;
-          // }
+            if (!hasReachedBeforeSelectedDate) {
+              fetchPageData(page + 1); // 使用递归调用以处理下一页
+            } else {
+              // 数据处理完成，更新状态
+              this.projectDetails = newProjectDetails;
+              this.projectPrices = newProjectPrices;
+              console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
+              this.isLoading = false;
+            }
+          } else {
+            console.log('没有更多数据，结束数据获取');
+            // 没有更多数据，更新状态
+            this.projectDetails = newProjectDetails;
+            this.projectPrices = newProjectPrices;
+            this.isLoading = false;
+          }
         }).catch(error => {
           console.error('fetchProjects 方法中捕获的错误:', error);
           this.isLoading = false;
