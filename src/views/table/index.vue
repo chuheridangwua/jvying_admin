@@ -25,7 +25,7 @@
       <!-- <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button> -->
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-20</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-21</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -169,7 +169,7 @@ export default {
       // 显示即将开始获取数据的通知
       this.$notify({
         title: '准备中',
-        message: '即将开始获取项目数据，请准备...',
+        message: '即将开始获取问卷列表，请准备...',
         type: 'info',
         duration: 6000 // 2秒后自动关闭
       });
@@ -223,15 +223,23 @@ export default {
                 fetchPageData(page + 1); // 递归调用以处理下一页
               } else {
                 // 数据处理完成，显示成功通知
-                this.$notify.success({
-                  title: '成功',
-                  message: '所有项目数据已成功获取',
-                  duration: 3000
-                });
+                // this.$notify.success({
+                //   title: '成功',
+                //   message: '所有项目数据已成功获取',
+                //   duration: 3000
+                // });
                 this.projectDetails = newProjectDetails;
                 this.projectPrices = newProjectPrices;
                 console.log('所有数据已获取，更新后的 projectDetails 和 projectPrices', this.projectDetails, this.projectPrices);
-                // this.prepareDownloadStatusList();
+                this.$notify({
+                  title: '准备中',
+                  message: '即将开始获取问卷数据，请准备...',
+                  type: 'info',
+                  duration: 6000 // 2秒后自动关闭
+                });
+                setTimeout(() => { // 延时2秒后开始执行数据获取
+                  this.prepareDownloadStatusList();
+                }, 2000); // 设置延时
               }
             } else {
               console.log('没有更多数据，结束数据获取');
