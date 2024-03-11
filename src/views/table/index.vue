@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="loading" type="warning" style="margin: 10px;">loading</el-button>
+      <el-button @click="loading" type="warning" style="margin: 10px;">loading-1</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -55,7 +55,7 @@
 
     <!-- 下载状态对话框 -->
     <el-dialog :visible.sync="isDownloadStatusDialogVisible" width="40%" :before-close="handleDownloadStatusDialogClose"
-      style="background-color: white;" title="下载状态">
+      style="background-color: white" title="下载状态">
       <el-table :data="downloadStatusList" style="width: 100%" align="center">
         <el-table-column prop="projectId" label="项目ID" width="120"></el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -145,13 +145,19 @@ export default {
   },
   methods: {
     loading() {
-      this.length = true
-      setTimeout(function () {
-        // 在这里写上你想要执行的操作
-        this.length = false
-        console.log("3秒后执行");
-      }, 3000); // 时间以毫秒为单位，3000毫秒等于3秒
+      const loadingInstance = this.$loading({
+        lock: true,
+        text: '正在获取问卷信息...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+
+      setTimeout(() => {
+        loadingInstance.close(); // 3秒后关闭加载指示器
+        console.log("加载完成");
+      }, 3000); // 设置延时为3000毫秒（即3秒）
     },
+
     async fetchProjects() {
       // 清空之前的数据
       this.rows = [];
