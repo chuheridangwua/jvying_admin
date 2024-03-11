@@ -25,7 +25,7 @@
       <el-button @click="resetFilters" type="danger" style="margin: 10px;">重置</el-button>
       <el-button @click="showDownloadStatusDialog" type="success" style="margin: 10px;">查看下载状况</el-button>
       <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">更新单日信息</el-button>
-      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-17</el-button>
+      <el-button @click="updateSingleDayInfo" type="warning" style="margin: 10px;">loading-18</el-button>
     </div>
 
     <el-table :data="filteredRows" style="margin: 0px 20px 10px;width: auto" height="68vh" border
@@ -185,7 +185,7 @@ export default {
       let page = 1;
       let processedProjectIds = new Set();
 
-      const fetchPageData = (page) => {
+      // const fetchPageData = (page) => {
         console.log(`开始处理页面 ${page}`);
         app.callFunction({
           name: "getAuthUrl",
@@ -235,9 +235,9 @@ export default {
           this.isLoading = false;
           this.$message.error('操作失败');
         });
-      };
+      // };
 
-      fetchPageData(page);
+      // fetchPageData(page);
     },
 
 
